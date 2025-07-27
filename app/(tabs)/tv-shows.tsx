@@ -6,33 +6,33 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { GenreChecklist } from '@/components/GenreChecklist';
 
-export default function MoviesScreen() {
+export default function TVShowsScreen() {
   const handleGenreChange = (selectedGenres: string[]) => {
-    console.log('Selected movie genres:', selectedGenres);
+    console.log('Selected TV show genres:', selectedGenres);
   };
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <IconSymbol
           size={310}
           color="#808080"
-          name="film"
+          name="tv"
           style={styles.headerImage}
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Movies</ThemedText>
+        <ThemedText type="title">TV Shows</ThemedText>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Discover by Genre</ThemedText>
         <ThemedText style={styles.description}>
-          Select your favorite movie genres to get personalized recommendations.
+          Select your favorite TV show genres to get personalized recommendations.
         </ThemedText>
       </ThemedView>
       <ThemedView style={styles.genreContainer}>
-        <GenreChecklist type="movie" onGenreChange={handleGenreChange} />
+        <GenreChecklist type="tv" onGenreChange={handleGenreChange} />
       </ThemedView>
     </ParallaxScrollView>
   );

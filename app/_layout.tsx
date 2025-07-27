@@ -2,15 +2,30 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { userService } from '@/services/userService';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  useEffect(() => {
+    // Initialize user when app loads
+    const initUser = async () => {
+      try {
+        await userService.initializeUser();
+      } catch (error) {
+        console.error('Failed to initialize user:', error);
+      }
+    };
+
+    initUser();
+  }, []);
 
   if (!loaded) {
     // Async font loading only occurs in development.
