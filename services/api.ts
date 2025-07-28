@@ -18,6 +18,9 @@ export interface Movie {
   imdbid: string;
   title: string;
   release_year: number;
+  runtime: number;
+  directors: string[];
+  cast: string[];
   genres: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
@@ -25,6 +28,7 @@ export interface Movie {
   poster_url: string;
   type: string;
   last_synced_at: string;
+  is_saved: boolean;
   watch_providers: {
     country: string;
     stream: string[];
@@ -38,6 +42,9 @@ export interface TVShow {
   imdbid: string;
   title: string;
   first_air_year: number;
+  runtime: number;
+  creators: string[];
+  cast: string[];
   genres: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
@@ -45,6 +52,7 @@ export interface TVShow {
   poster_url: string;
   type: string;
   last_synced_at: string;
+  is_saved: boolean;
   watch_providers: {
     country: string;
     stream: string[];
@@ -88,6 +96,26 @@ export interface RandomContentParams {
   country?: string;
 }
 
+export interface SaveContentParams {
+  movie_id?: number;
+  tv_show_id?: number;
+  imdbid?: string;
+}
+
+export interface SaveContentResponse {
+  success: boolean;
+  message: string;
+  data: Movie | TVShow;
+}
+
+export interface GetSavedContentResponse {
+  success: boolean;
+  data: Movie[] | TVShow[];
+  meta: {
+    total_count: number;
+  };
+}
+
 export const api = {
   async createUser(): Promise<CreateUserResponse> {
     try {
@@ -112,7 +140,7 @@ export const api = {
     }
   },
 
-  async getRandomMovies(params: RandomContentParams = {}): Promise<RandomMoviesResponse> {
+  async getRandomMovies(params: RandomContentParams = {}, accessKey?: string): Promise<RandomMoviesResponse> {
     try {
       const searchParams = new URLSearchParams();
       
@@ -123,11 +151,17 @@ export const api = {
 
       const url = `${API_BASE_URL}/api/v1/movies/random${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+      };
+      
+      if (accessKey) {
+        headers['Authorization'] = `Bearer ${accessKey}`;
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -141,7 +175,7 @@ export const api = {
     }
   },
 
-  async getRandomTVShows(params: RandomContentParams = {}): Promise<RandomTVShowsResponse> {
+  async getRandomTVShows(params: RandomContentParams = {}, accessKey?: string): Promise<RandomTVShowsResponse> {
     try {
       const searchParams = new URLSearchParams();
       
@@ -152,11 +186,17 @@ export const api = {
 
       const url = `${API_BASE_URL}/api/v1/tv_shows/random${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+      };
+      
+      if (accessKey) {
+        headers['Authorization'] = `Bearer ${accessKey}`;
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -166,6 +206,126 @@ export const api = {
       return await response.json();
     } catch (error) {
       console.error('Failed to fetch random TV shows:', error);
+      throw error;
+    }
+  },
+
+  async saveMovie(params: SaveContentParams, accessKey: string): Promise<SaveContentResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_movies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to save movie:', error);
+      throw error;
+    }
+  },
+
+  async getSavedMovies(accessKey: string): Promise<GetSavedContentResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_movies`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get saved movies:', error);
+      throw error;
+    }
+  },
+
+  async removeSavedMovie(movieId: number, accessKey: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_movies/${movieId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Failed to remove saved movie:', error);
+      throw error;
+    }
+  },
+
+  async saveTVShow(params: SaveContentParams, accessKey: string): Promise<SaveContentResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to save TV show:', error);
+      throw error;
+    }
+  },
+
+  async getSavedTVShows(accessKey: string): Promise<GetSavedContentResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get saved TV shows:', error);
+      throw error;
+    }
+  },
+
+  async removeSavedTVShow(tvShowId: number, accessKey: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows/${tvShowId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Failed to remove saved TV show:', error);
       throw error;
     }
   }

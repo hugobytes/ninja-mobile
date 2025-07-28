@@ -7,6 +7,8 @@ import { MovieCard } from '@/components/MovieCard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { api, Movie, TVShow } from '@/services/api';
+import { userService } from '@/services/userService';
+import { useWatchlist } from '@/contexts/WatchlistContext';
 
 type ContentItem = Movie | TVShow;
 
@@ -20,6 +22,7 @@ export default function ExploreScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const tintColor = useThemeColor({}, 'tint');
   const backgroundColor = useThemeColor({}, 'background');
 
@@ -31,17 +34,19 @@ export default function ExploreScreen() {
       setLoading(true);
 
       try {
+        const accessKey = await userService.getAccessKey();
+        
         const response = type === 'movie' 
           ? await api.getRandomMovies({
               limit: 20,
               genres,
               country: 'GB'
-            })
+            }, accessKey || undefined)
           : await api.getRandomTVShows({
               limit: 20,
               genres,
               country: 'GB'
-            });
+            }, accessKey || undefined);
 
         if (isMounted && response.success && response.data && response.data.length > 0) {
           setContent(response.data);
@@ -74,6 +79,7 @@ export default function ExploreScreen() {
     setLoadingMore(true);
 
     try {
+      const accessKey = await userService.getAccessKey();
       const excludeIds = content.map(item => item.imdbid).filter(id => id).join(',');
       
       const response = type === 'movie'
@@ -82,13 +88,13 @@ export default function ExploreScreen() {
             genres,
             exclude_imdbids: excludeIds,
             country: 'GB'
-          })
+          }, accessKey || undefined)
         : await api.getRandomTVShows({
             limit: 1,
             genres,
             exclude_imdbids: excludeIds,
             country: 'GB'
-          });
+          }, accessKey || undefined);
 
       if (response.success && response.data && response.data.length > 0) {
         setContent(prev => [...prev, ...response.data]);
@@ -122,8 +128,36 @@ export default function ExploreScreen() {
     // TODO: Navigate to content details
   };
 
+  const handleWatchlistPress = async (item: ContentItem) => {
+    try {
+      const isCurrentlyInWatchlist = isInWatchlist(item);
+      
+      if (isCurrentlyInWatchlist) {
+        await removeFromWatchlist(item);
+        // Update the item's is_saved status locally
+        setContent(prev => prev.map(contentItem => 
+          contentItem.id === item.id ? { ...contentItem, is_saved: false } : contentItem
+        ));
+      } else {
+        await addToWatchlist(item);
+        // Update the item's is_saved status locally
+        setContent(prev => prev.map(contentItem => 
+          contentItem.id === item.id ? { ...contentItem, is_saved: true } : contentItem
+        ));
+      }
+    } catch (error) {
+      // Error handling is done in the context
+    }
+  };
+
   const renderContent = ({ item }: { item: ContentItem }) => (
-    <MovieCard movie={item} onPress={handleContentPress} variant="fullscreen" />
+    <MovieCard 
+      movie={item} 
+      onPress={handleContentPress} 
+      variant="fullscreen"
+      onWatchlistPress={handleWatchlistPress}
+      isInWatchlist={isInWatchlist(item)}
+    />
   );
 
   const renderFooter = () => {

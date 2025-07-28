@@ -14,20 +14,24 @@ interface MovieCardProps {
   movie: ContentItem;
   onPress?: (movie: ContentItem) => void;
   variant?: 'grid' | 'fullscreen';
+  onWatchlistPress?: (movie: ContentItem) => void;
+  isInWatchlist?: boolean;
 }
 
 interface FullscreenMovieCardProps {
   movie: ContentItem;
   onPress?: (movie: ContentItem) => void;
+  onWatchlistPress?: (movie: ContentItem) => void;
+  isInWatchlist?: boolean;
 }
 
-export function MovieCard({ movie, onPress, variant = 'grid' }: MovieCardProps) {
-  const borderColor = useThemeColor({}, 'border');
+export function MovieCard({ movie, onPress, variant = 'grid', onWatchlistPress, isInWatchlist }: MovieCardProps) {
+  const borderColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background');
   const tintColor = useThemeColor({}, 'tint');
   
   if (variant === 'fullscreen') {
-    return <FullscreenMovieCard movie={movie} onPress={onPress} />;
+    return <FullscreenMovieCard movie={movie} onPress={onPress} onWatchlistPress={onWatchlistPress} isInWatchlist={isInWatchlist} />;
   }
 
   const cardWidth = (width - 48) / 2; // 2 cards per row with margins
@@ -46,7 +50,7 @@ export function MovieCard({ movie, onPress, variant = 'grid' }: MovieCardProps) 
       />
       
       <ThemedView style={styles.content}>
-        <ThemedText style={styles.title} numberOfLines={2}>
+        <ThemedText style={styles.title}>
           {movie.title}
         </ThemedText>
         
@@ -103,8 +107,8 @@ export function MovieCard({ movie, onPress, variant = 'grid' }: MovieCardProps) 
   );
 }
 
-function FullscreenMovieCard({ movie, onPress }: FullscreenMovieCardProps) {
-  const borderColor = useThemeColor({}, 'border');
+function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }: FullscreenMovieCardProps) {
+  const borderColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background');
   const tintColor = useThemeColor({}, 'tint');
   
@@ -126,9 +130,16 @@ function FullscreenMovieCard({ movie, onPress }: FullscreenMovieCardProps) {
         />
         
         <ThemedView style={styles.fullscreenTopContent}>
-          <ThemedText style={styles.fullscreenYear}>
-            {'release_year' in movie ? movie.release_year : movie.first_air_year}
-          </ThemedText>
+          <ThemedView style={styles.fullscreenMetadata}>
+            <ThemedText style={styles.fullscreenYear}>
+              {'release_year' in movie ? movie.release_year : movie.first_air_year}
+            </ThemedText>
+            {movie.runtime && (
+              <ThemedText style={styles.fullscreenRuntime}>
+                {movie.runtime} min
+              </ThemedText>
+            )}
+          </ThemedView>
           
           <ThemedView style={styles.fullscreenRatingsContainer}>
             {movie.imdb_rating && (
@@ -162,9 +173,31 @@ function FullscreenMovieCard({ movie, onPress }: FullscreenMovieCardProps) {
       </ThemedView>
       
       <ThemedView style={styles.fullscreenBottomContent}>
-        <ThemedText style={styles.overview} numberOfLines={4}>
+        <ThemedText style={styles.overview} numberOfLines={3}>
           {movie.overview}
         </ThemedText>
+        
+        {(movie.type === 'movie' ? (movie as Movie).directors?.length > 0 : (movie as TVShow).creators?.length > 0) && (
+          <ThemedView style={styles.creditsSection}>
+            <ThemedText style={styles.creditsLabel}>
+              {movie.type === 'movie' ? 'Director:' : 'Creator:'}
+            </ThemedText>
+            <ThemedText style={styles.creditsText}>
+              {movie.type === 'movie' 
+                ? (movie as Movie).directors?.slice(0, 2).join(', ') 
+                : (movie as TVShow).creators?.slice(0, 2).join(', ')}
+            </ThemedText>
+          </ThemedView>
+        )}
+        
+        {movie.cast?.length > 0 && (
+          <ThemedView style={styles.creditsSection}>
+            <ThemedText style={styles.creditsLabel}>Cast:</ThemedText>
+            <ThemedText style={styles.creditsText}>
+              {movie.cast.slice(0, 3).join(', ')}
+            </ThemedText>
+          </ThemedView>
+        )}
         
         <ThemedView style={styles.fullscreenGenresContainer}>
           {movie.genres?.slice(0, 4).map((genre) => (
@@ -186,6 +219,23 @@ function FullscreenMovieCard({ movie, onPress }: FullscreenMovieCardProps) {
               Stream on {movie.watch_providers.stream.slice(0, 2).join(', ')}
             </ThemedText>
           </ThemedView>
+        )}
+        
+        {onWatchlistPress && (
+          <TouchableOpacity
+            style={[styles.watchlistButton, { backgroundColor: isInWatchlist ? tintColor : 'transparent', borderColor: tintColor }]}
+            onPress={() => onWatchlistPress(movie)}
+            activeOpacity={0.8}
+          >
+            <IconSymbol 
+              name={isInWatchlist ? "checkmark" : "plus"} 
+              size={18} 
+              color={isInWatchlist ? "white" : tintColor} 
+            />
+            <ThemedText style={[styles.watchlistButtonText, { color: isInWatchlist ? "white" : tintColor }]}>
+              {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
+            </ThemedText>
+          </TouchableOpacity>
         )}
       </ThemedView>
     </TouchableOpacity>
@@ -247,7 +297,17 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     textAlign: 'left',
   },
+  fullscreenMetadata: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
   fullscreenYear: {
+    fontSize: 16,
+    opacity: 0.7,
+    fontWeight: '500',
+  },
+  fullscreenRuntime: {
     fontSize: 16,
     opacity: 0.7,
     fontWeight: '500',
@@ -269,7 +329,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     opacity: 0.8,
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  creditsSection: {
+    marginBottom: 12,
+  },
+  creditsLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+    opacity: 0.9,
+  },
+  creditsText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.8,
   },
   fullscreenGenresContainer: {
     flexDirection: 'row',
@@ -295,6 +369,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     fontWeight: '600',
+  },
+  watchlistButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    marginTop: 12,
+  },
+  watchlistButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   content: {
     padding: 12,
