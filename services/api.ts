@@ -22,6 +22,10 @@ export interface Movie {
   directors: string[];
   cast: string[];
   genres: string[];
+  tropes: string[];
+  moods: string[];
+  acclaims: string[];
+  origins: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
   overview: string;
@@ -46,6 +50,10 @@ export interface TVShow {
   creators: string[];
   cast: string[];
   genres: string[];
+  tropes: string[];
+  moods: string[];
+  acclaims: string[];
+  origins: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
   overview: string;
@@ -92,6 +100,10 @@ export interface RandomTVShowsResponse {
 export interface RandomContentParams {
   limit?: number;
   genres?: string;
+  tropes?: string;
+  moods?: string;
+  acclaims?: string;
+  origins?: string;
   exclude_imdbids?: string;
   country?: string;
 }
@@ -146,6 +158,10 @@ export const api = {
       
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
+      if (params.tropes) searchParams.append('tropes', params.tropes);
+      if (params.moods) searchParams.append('moods', params.moods);
+      if (params.acclaims) searchParams.append('acclaims', params.acclaims);
+      if (params.origins) searchParams.append('origins', params.origins);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 
@@ -181,6 +197,10 @@ export const api = {
       
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
+      if (params.tropes) searchParams.append('tropes', params.tropes);
+      if (params.moods) searchParams.append('moods', params.moods);
+      if (params.acclaims) searchParams.append('acclaims', params.acclaims);
+      if (params.origins) searchParams.append('origins', params.origins);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 

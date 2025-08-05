@@ -199,18 +199,100 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
           </ThemedView>
         )}
         
-        <ThemedView style={styles.fullscreenGenresContainer}>
-          {movie.genres?.slice(0, 4).map((genre) => (
-            <ThemedView 
-              key={genre}
-              style={[styles.fullscreenGenreTag, { borderColor: tintColor + '40' }]}
-            >
-              <ThemedText style={[styles.fullscreenGenreText, { color: tintColor }]}>
-                {genre}
-              </ThemedText>
+        {/* Genres */}
+        {movie.genres?.length > 0 && (
+          <ThemedView style={styles.criteriaSection}>
+            <ThemedText style={styles.criteriaLabel}>Genres:</ThemedText>
+            <ThemedView style={styles.fullscreenGenresContainer}>
+              {movie.genres.slice(0, 4).map((genre) => (
+                <ThemedView 
+                  key={genre}
+                  style={[styles.fullscreenGenreTag, { borderColor: tintColor + '40' }]}
+                >
+                  <ThemedText style={[styles.fullscreenGenreText, { color: tintColor }]}>
+                    {genre}
+                  </ThemedText>
+                </ThemedView>
+              ))}
             </ThemedView>
-          ))}
-        </ThemedView>
+          </ThemedView>
+        )}
+
+        {/* Tropes */}
+        {movie.tropes?.length > 0 && (
+          <ThemedView style={styles.criteriaSection}>
+            <ThemedText style={styles.criteriaLabel}>Tropes:</ThemedText>
+            <ThemedView style={styles.fullscreenGenresContainer}>
+              {movie.tropes.slice(0, 4).map((trope) => (
+                <ThemedView 
+                  key={trope}
+                  style={[styles.fullscreenGenreTag, { borderColor: '#9333EA40' }]}
+                >
+                  <ThemedText style={[styles.fullscreenGenreText, { color: '#9333EA' }]}>
+                    {trope}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          </ThemedView>
+        )}
+
+        {/* Moods */}
+        {movie.moods?.length > 0 && (
+          <ThemedView style={styles.criteriaSection}>
+            <ThemedText style={styles.criteriaLabel}>Moods:</ThemedText>
+            <ThemedView style={styles.fullscreenGenresContainer}>
+              {movie.moods.slice(0, 4).map((mood) => (
+                <ThemedView 
+                  key={mood}
+                  style={[styles.fullscreenGenreTag, { borderColor: '#059C6040' }]}
+                >
+                  <ThemedText style={[styles.fullscreenGenreText, { color: '#059C60' }]}>
+                    {mood}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          </ThemedView>
+        )}
+
+        {/* Acclaims */}
+        {movie.acclaims?.length > 0 && (
+          <ThemedView style={styles.criteriaSection}>
+            <ThemedText style={styles.criteriaLabel}>Acclaims:</ThemedText>
+            <ThemedView style={styles.fullscreenGenresContainer}>
+              {movie.acclaims.slice(0, 4).map((acclaim) => (
+                <ThemedView 
+                  key={acclaim}
+                  style={[styles.fullscreenGenreTag, { borderColor: '#DC262640' }]}
+                >
+                  <ThemedText style={[styles.fullscreenGenreText, { color: '#DC2626' }]}>
+                    {acclaim}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          </ThemedView>
+        )}
+
+        {/* Origins */}
+        {movie.origins?.length > 0 && (
+          <ThemedView style={styles.criteriaSection}>
+            <ThemedText style={styles.criteriaLabel}>Origins:</ThemedText>
+            <ThemedView style={styles.fullscreenGenresContainer}>
+              {movie.origins.slice(0, 4).map((origin) => (
+                <ThemedView 
+                  key={origin}
+                  style={[styles.fullscreenGenreTag, { borderColor: '#EA580C40' }]}
+                >
+                  <ThemedText style={[styles.fullscreenGenreText, { color: '#EA580C' }]}>
+                    {origin}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          </ThemedView>
+        )}
         
         {movie.watch_providers?.stream?.length > 0 && (
           <ThemedView style={styles.fullscreenStreamingContainer}>
@@ -344,6 +426,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     opacity: 0.8,
+  },
+  criteriaSection: {
+    marginBottom: 12,
+  },
+  criteriaLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+    opacity: 0.9,
   },
   fullscreenGenresContainer: {
     flexDirection: 'row',

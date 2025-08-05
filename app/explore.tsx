@@ -15,7 +15,14 @@ type ContentItem = Movie | TVShow;
 const { height } = Dimensions.get('window');
 
 export default function ExploreScreen() {
-  const { genres, type } = useLocalSearchParams<{ genres: string; type: string }>();
+  const { genres, tropes, moods, acclaims, origins, type } = useLocalSearchParams<{ 
+    genres: string; 
+    tropes: string; 
+    moods: string; 
+    acclaims: string; 
+    origins: string; 
+    type: string 
+  }>();
   const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -40,20 +47,36 @@ export default function ExploreScreen() {
           ? await api.getRandomMovies({
               limit: 20,
               genres,
+              tropes,
+              moods,
+              acclaims,
+              origins,
               country: 'GB'
             }, accessKey || undefined)
           : await api.getRandomTVShows({
               limit: 20,
               genres,
+              tropes,
+              moods,
+              acclaims,
+              origins,
               country: 'GB'
             }, accessKey || undefined);
 
-        if (isMounted && response.success && response.data && response.data.length > 0) {
-          setContent(response.data);
-          setHasMore(response.data.length === 20);
+        if (isMounted && response.success) {
+          if (response.data && response.data.length > 0) {
+            setContent(response.data);
+            setHasMore(response.data.length === 20);
+          } else {
+            // No content found but API succeeded
+            setContent([]);
+            setHasMore(false);
+          }
         } else if (isMounted) {
+          // API returned success: false
           setContent([]);
           setHasMore(false);
+          Alert.alert('Info', 'No content found matching your criteria.');
         }
       } catch (error) {
         console.error('Failed to load content:', error);
@@ -72,7 +95,7 @@ export default function ExploreScreen() {
     return () => {
       isMounted = false;
     };
-  }, [genres]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [genres, tropes, moods, acclaims, origins]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMoreContent = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -86,21 +109,36 @@ export default function ExploreScreen() {
         ? await api.getRandomMovies({
             limit: 1,
             genres,
+            tropes,
+            moods,
+            acclaims,
+            origins,
             exclude_imdbids: excludeIds,
             country: 'GB'
           }, accessKey || undefined)
         : await api.getRandomTVShows({
             limit: 1,
             genres,
+            tropes,
+            moods,
+            acclaims,
+            origins,
             exclude_imdbids: excludeIds,
             country: 'GB'
           }, accessKey || undefined);
 
-      if (response.success && response.data && response.data.length > 0) {
-        setContent(prev => [...prev, ...response.data]);
-        setHasMore(true);
+      if (response.success) {
+        if (response.data && response.data.length > 0) {
+          setContent(prev => [...prev, ...response.data]);
+          setHasMore(true);
+        } else {
+          // No more content available
+          setHasMore(false);
+        }
       } else {
+        // API returned success: false
         setHasMore(false);
+        console.warn('API returned error when loading more content:', response);
       }
     } catch (error) {
       console.error('Failed to load more content:', error);
@@ -200,24 +238,43 @@ export default function ExploreScreen() {
     
     return (
       <ThemedView style={styles.emptyContainer}>
+        <IconSymbol name="film" size={64} color={tintColor} style={styles.emptyIcon} />
         <ThemedText style={styles.emptyText}>
-          No movies found for the selected genres.
+          No {type === 'movie' ? 'movies' : 'TV shows'} found
         </ThemedText>
         <ThemedText style={styles.emptySubtext}>
-          Try selecting different genres or check back later.
+          Try different criteria or check back later for new content.
         </ThemedText>
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: tintColor }]}
+          onPress={() => router.back()}
+          activeOpacity={0.8}
+        >
+          <IconSymbol name="arrow.left" size={20} color="white" style={styles.backButtonIcon} />
+          <ThemedText style={styles.backButtonText}>Back to Selection</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
     );
   };
 
-  const genreList = genres?.split(',') || [];
+  // Build selected criteria display
+  const selectedCriteria: string[] = [];
+  if (genres) selectedCriteria.push(...genres.split(','));
+  if (tropes) selectedCriteria.push(...tropes.split(','));
+  if (moods) selectedCriteria.push(...moods.split(','));
+  if (acclaims) selectedCriteria.push(...acclaims.split(','));
+  if (origins) selectedCriteria.push(...origins.split(','));
+  
   const title = type === 'movie' ? 'Movies' : 'TV Shows';
+  const criteriaDisplay = selectedCriteria.length > 0 
+    ? selectedCriteria.slice(0, 2).join(', ') + (selectedCriteria.length > 2 ? ` +${selectedCriteria.length - 2}` : '')
+    : 'All';
 
   return (
     <>
       <Stack.Screen 
         options={{ 
-          title: `${title} • ${genreList.join(', ')}`,
+          title: `${title} • ${criteriaDisplay}`,
           headerBackTitle: 'Back'
         }} 
       />
@@ -340,16 +397,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    gap: 8,
+    gap: 16,
+  },
+  emptyIcon: {
+    marginBottom: 8,
+    opacity: 0.5,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     textAlign: 'center',
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 16,
     opacity: 0.7,
     textAlign: 'center',
+    marginBottom: 16,
   },
 });

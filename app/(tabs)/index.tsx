@@ -1,9 +1,7 @@
 import { StyleSheet } from 'react-native';
 
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { GenreChecklist } from '@/components/GenreChecklist';
 
 export default function MoviesScreen() {
@@ -12,52 +10,24 @@ export default function MoviesScreen() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="film"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.header}>
         <ThemedText type="title">Movies</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Discover by Genre</ThemedText>
-        <ThemedText style={styles.description}>
-          Select your favorite movie genres to get personalized recommendations.
-        </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.genreContainer}>
-        <GenreChecklist type="movie" onGenreChange={handleGenreChange} />
-      </ThemedView>
-    </ParallaxScrollView>
+      <GenreChecklist type="movie" onGenreChange={handleGenreChange} />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  description: {
-    marginBottom: 8,
-  },
-  genreContainer: {
+  container: {
     flex: 1,
-    minHeight: 400,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 4,
   },
 });
