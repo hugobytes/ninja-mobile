@@ -29,8 +29,9 @@ export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
       try {
         setLoading(true);
         const response = await api.getTags();
+        const shuffledTags = [...response.tags].sort(() => Math.random() - 0.5);
         setAllTags(response.tags);
-        setDisplayedTags(response.tags);
+        setDisplayedTags(shuffledTags);
         setError(null);
       } catch (err) {
         setError('Failed to load tags');
@@ -148,7 +149,7 @@ export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
                   <ThemedText
                     style={[
                       styles.pillText,
-                      isSelected && { color: 'white' }
+                      isSelected && styles.selectedPillText
                     ]}
                   >
                     {tag.name}
@@ -161,16 +162,16 @@ export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
 
         {/* Explore button */}
         <TouchableOpacity
-          style={[styles.exploreButton, { backgroundColor: tintColor }]}
+          style={[styles.exploreButton, { backgroundColor: 'blue' }]}
           onPress={handleExplore}
           activeOpacity={0.8}
         >
           <IconSymbol name="play.fill" size={20} color="white" style={styles.buttonIcon} />
           <View style={styles.buttonTextContainer}>
-            <ThemedText style={styles.exploreButtonTitle}>
+            <ThemedText style={[styles.exploreButtonTitle, { color: 'white' }]}>
               Explore {type === 'movie' ? 'Movies' : 'TV Shows'}
             </ThemedText>
-            <ThemedText style={styles.exploreButtonSubtitle} numberOfLines={1}>
+            <ThemedText style={[styles.exploreButtonSubtitle, { color: 'white' }]} numberOfLines={1}>
               {selectedTags.length > 0 ? (() => {
                 const maxLength = 40;
                 const itemsText = selectedTags.join(', ');
@@ -295,15 +296,18 @@ const styles = StyleSheet.create({
   },
   tagPill: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  selectedPillText: {
+    color: 'black',
   },
   exploreButton: {
     flexDirection: 'row',
