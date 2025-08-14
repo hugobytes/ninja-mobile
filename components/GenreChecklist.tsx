@@ -1,164 +1,73 @@
-import { useState, useRef, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, Dimensions, View } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, TouchableOpacity, ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { api, Tag } from '@/services/api';
 
-const { width: screenWidth } = Dimensions.get('window');
-
-const MOVIE_GENRES = [
-  'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary',
-  'Drama', 'Family', 'Fantasy', 'History', 'Horror', 'Music',
-  'Mystery', 'Romance', 'Science Fiction', 'Thriller', 'War', 'Western'
-];
-
-const TV_GENRES = [
-  'Action & Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
-  'Family', 'Fantasy', 'Kids', 'Mystery', 'News', 'Reality',
-  'Sci-Fi & Fantasy', 'Soap', 'Talk', 'War & Politics', 'Western'
-];
-
-const TROPES = [
-  'Coming-of-Age',
-  'Slasher',
-  'Troubled Genius',
-  'Forbidden Love',
-  'Detective',
-  'Time Travel',
-  'Culture Clash',
-  'Heist',
-  'Revenge',
-  'Found Family',
-  'Survival',
-  'Historical Drama',
-  'Based on a True Story',
-  'Fish Out of Water',
-  'Rags to Riches',
-  'One Crazy Night',
-  'Road Trip',
-  'Apocalyptic',
-  'Parallel Realities',
-  'Political Intrigue',
-  'Sports Underdog',
-  'Conspiracy',
-  'Based on a Novel'
-];
-
-const MOODS = [
-  'Uplifting',
-  'Nostalgic',
-  'Heartfelt',
-  'Thought-provoking',
-  'Light-hearted',
-  'Gripping',
-  'Dark',
-  'Scary',
-  'Tense',
-  'Offbeat',
-  'Chill',
-  'Romantic',
-  'Disturbing',
-  'Wholesome',
-  'Cosy',
-  'Melancholic'
-];
-
-const ACCLAIMS = [
-  'Oscar Winner',
-  'Critically Acclaimed',
-  'Festival Favorite',
-  'Certified Fresh',
-  'IMDb Top 250',
-  'Loved by Audiences',
-  'Cult Classic',
-  'Underrated Gem',
-  "So Bad It's Good",
-  'Viral Hit',
-  'Box Office Hit',
-  'Flop with a Fanbase',
-  'Director’s Masterpiece'
-];
-
-const ORIGINS = [
-  '50s and older',
-  '70s',
-  '80s',
-  '90s',
-  '2000s',
-  '2010s',
-  '2020s',
-  'Set in the Past',
-  'Set in the Future',
-  'High Budget',
-  'Low Budget',
-  'International (Non-English)',
-  'British',
-  'French',
-  'USA',
-  'South America',
-  'Bollywood',
-  'Foreign Language',
-  'Animated',
-  'Live Action',
-  'A24',
-  'Studio Ghibli',
-  'Netflix Original',
-  'Based on a Book',
-  'Shot on Film',
-  'One Location'
-];
-
-const CRITERIA_LABELS = ['Genres', 'Tropes', 'Moods', 'Origins', 'Acclaims'];
-
-interface GenreChecklistProps {
+interface TagsSelectionProps {
   type: 'movie' | 'tv';
-  onGenreChange?: (selectedGenres: string[]) => void;
+  onTagsChange?: (selectedTags: string[]) => void;
 }
 
-export function GenreChecklist({ type, onGenreChange }: GenreChecklistProps) {
-  const criterias = type === 'movie' 
-    ? [MOVIE_GENRES, TROPES, MOODS, ORIGINS, ACCLAIMS]
-    : [TV_GENRES, TROPES, MOODS, ORIGINS, ACCLAIMS];
-    
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [currentCriteriaIndex, setCurrentCriteriaIndex] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
+export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [displayedTags, setDisplayedTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const tintColor = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
 
-  const toggleItem = (item: string) => {
-    const newSelection = selectedItems.includes(item)
-      ? selectedItems.filter(i => i !== item)
-      : [...selectedItems, item];
-    
-    setSelectedItems(newSelection);
-    onGenreChange?.(newSelection);
+  // Fetch tags on component mount
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getTags();
+        setAllTags(response.tags);
+        setDisplayedTags(response.tags);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load tags');
+        console.error('Error fetching tags:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
+  // Shuffle the displayed tags
+  const shuffleTags = () => {
+    const shuffled = [...allTags].sort(() => Math.random() - 0.5);
+    setDisplayedTags(shuffled);
   };
 
-  const removeSelectedItem = (item: string) => {
-    const newSelection = selectedItems.filter(i => i !== item);
-    setSelectedItems(newSelection);
-    onGenreChange?.(newSelection);
+  const toggleTag = (tagName: string) => {
+    const newSelection = selectedTags.includes(tagName)
+      ? selectedTags.filter(tag => tag !== tagName)
+      : [...selectedTags, tagName];
+    
+    setSelectedTags(newSelection);
+    onTagsChange?.(newSelection);
+  };
+
+  const clearAllTags = () => {
+    setSelectedTags([]);
+    onTagsChange?.([]);
   };
 
   const handleExplore = () => {
-    // Group selections by type for API
-    const genres = selectedItems.filter(item => criterias[0].includes(item));
-    const tropes = selectedItems.filter(item => TROPES.includes(item));
-    const moods = selectedItems.filter(item => MOODS.includes(item));
-    const origins = selectedItems.filter(item => ORIGINS.includes(item));
-    const acclaims = selectedItems.filter(item => ACCLAIMS.includes(item));
-
     const params: any = { type };
-    if (genres.length > 0) params.genres = genres.join(',');
-    if (tropes.length > 0) params.tropes = tropes.join(',');
-    if (moods.length > 0) params.moods = moods.join(',');
-    if (origins.length > 0) params.origins = origins.join(',');
-    if (acclaims.length > 0) params.acclaims = acclaims.join(',');
+    if (selectedTags.length > 0) {
+      params.tags = selectedTags.join(',');
+    }
 
     router.push({
       pathname: '/explore',
@@ -166,64 +75,91 @@ export function GenreChecklist({ type, onGenreChange }: GenreChecklistProps) {
     });
   };
 
-  const renderCriteriaPage = (criteria: string[], index: number) => (
-    <ThemedView key={index} style={[styles.criteriaPage, { width: screenWidth }]}>
-      <ThemedView style={styles.criteriaHeader}>
-        <ThemedText style={[styles.criteriaTitle, { color: tintColor }]}>
-          {CRITERIA_LABELS[index]}
-        </ThemedText>
-      </ThemedView>
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.criteriaScrollView}>
-        <ThemedView style={styles.criteriaGrid}>
-          {criteria.map((item) => {
-            const isSelected = selectedItems.includes(item);
-            return (
-              <TouchableOpacity
-                key={item}
-                style={[
-                  styles.criteriaPill,
-                  { borderColor: textColor + '30' },
-                  isSelected && { backgroundColor: tintColor, borderColor: tintColor }
-                ]}
-                onPress={() => toggleItem(item)}
-                activeOpacity={0.7}
-              >
-                <ThemedText
-                  style={[
-                    styles.pillText,
-                    isSelected && { color: 'white' }
-                  ]}
-                >
-                  {item}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={[]}>
+        <ThemedView style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={tintColor} />
+          <ThemedText style={styles.loadingText}>Loading tags...</ThemedText>
         </ThemedView>
-      </ScrollView>
-    </ThemedView>
-  );
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={[]}>
+        <ThemedView style={styles.errorContainer}>
+          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <TouchableOpacity 
+            style={[styles.retryButton, { backgroundColor: tintColor }]} 
+            onPress={() => window.location.reload()}
+          >
+            <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
       <ThemedView style={styles.content}>
-        {/* Swipeable criteria content */}
-        <ScrollView
-          ref={scrollViewRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.swipeableContainer}
-          contentContainerStyle={{ width: screenWidth * criterias.length }}
-          onMomentumScrollEnd={(event) => {
-            const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-            setCurrentCriteriaIndex(index);
-          }}
-        >
-          {criterias.map((criteria, index) => renderCriteriaPage(criteria, index))}
+        {/* Header with shuffle button */}
+        <ThemedView style={styles.header}>
+          <ThemedText style={[styles.title, { color: tintColor }]}>
+            All Tags ({selectedTags.length})
+          </ThemedText>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity 
+              style={[styles.shuffleButton, { borderColor: tintColor }]} 
+              onPress={shuffleTags}
+            >
+              <IconSymbol name="shuffle" size={16} color={tintColor} />
+              <ThemedText style={[styles.shuffleText, { color: tintColor }]}>Shuffle</ThemedText>
+            </TouchableOpacity>
+            {selectedTags.length > 0 && (
+              <TouchableOpacity 
+                style={[styles.clearButton, { backgroundColor: tintColor + '20' }]} 
+                onPress={clearAllTags}
+              >
+                <ThemedText style={[styles.clearText, { color: tintColor }]}>Clear All</ThemedText>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ThemedView>
+
+        {/* Tags grid */}
+        <ScrollView style={styles.tagsContainer} contentContainerStyle={styles.tagsContent}>
+          <ThemedView style={styles.tagsGrid}>
+            {displayedTags.map((tag) => {
+              const isSelected = selectedTags.includes(tag.name);
+              return (
+                <TouchableOpacity
+                  key={tag.id}
+                  style={[
+                    styles.tagPill,
+                    { borderColor: textColor + '30' },
+                    isSelected && { backgroundColor: tintColor, borderColor: tintColor }
+                  ]}
+                  onPress={() => toggleTag(tag.name)}
+                  activeOpacity={0.7}
+                >
+                  <ThemedText
+                    style={[
+                      styles.pillText,
+                      isSelected && { color: 'white' }
+                    ]}
+                  >
+                    {tag.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ThemedView>
         </ScrollView>
 
-        {/* Explore button - always visible at bottom */}
+        {/* Explore button */}
         <TouchableOpacity
           style={[styles.exploreButton, { backgroundColor: tintColor }]}
           onPress={handleExplore}
@@ -232,12 +168,12 @@ export function GenreChecklist({ type, onGenreChange }: GenreChecklistProps) {
           <IconSymbol name="play.fill" size={20} color="white" style={styles.buttonIcon} />
           <View style={styles.buttonTextContainer}>
             <ThemedText style={styles.exploreButtonTitle}>
-              Explore
+              Explore {type === 'movie' ? 'Movies' : 'TV Shows'}
             </ThemedText>
             <ThemedText style={styles.exploreButtonSubtitle} numberOfLines={1}>
-              {selectedItems.length > 0 ? (() => {
-                const maxLength = 40; // Approximate character limit
-                const itemsText = selectedItems.join(', ');
+              {selectedTags.length > 0 ? (() => {
+                const maxLength = 40;
+                const itemsText = selectedTags.join(', ');
                 if (itemsText.length <= maxLength) {
                   return itemsText;
                 }
@@ -245,16 +181,16 @@ export function GenreChecklist({ type, onGenreChange }: GenreChecklistProps) {
                 let truncatedText = '';
                 let itemCount = 0;
                 
-                for (const item of selectedItems) {
-                  const testText = truncatedText ? `${truncatedText}, ${item}` : item;
-                  if (testText.length > maxLength - 15) { // Reserve space for "... + X more"
+                for (const tag of selectedTags) {
+                  const testText = truncatedText ? `${truncatedText}, ${tag}` : tag;
+                  if (testText.length > maxLength - 15) {
                     break;
                   }
                   truncatedText = testText;
                   itemCount++;
                 }
                 
-                const remainingCount = selectedItems.length - itemCount;
+                const remainingCount = selectedTags.length - itemCount;
                 return remainingCount > 0 
                   ? `${truncatedText}... +${remainingCount} more`
                   : truncatedText;
@@ -274,34 +210,90 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  criteriaHeader: {
-    alignItems: 'center',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    paddingVertical: 16,
-    marginBottom: 16,
+    alignItems: 'center',
+    gap: 16,
   },
-  criteriaTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+  loadingText: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    gap: 16,
+  },
+  errorText: {
+    fontSize: 16,
     textAlign: 'center',
+    opacity: 0.7,
   },
-  swipeableContainer: {
-    flex: 1,
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  criteriaPage: {
-    flex: 1,
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  criteriaScrollView: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  criteriaGrid: {
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  shuffleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 16,
+    gap: 4,
+  },
+  shuffleText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  clearText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tagsContainer: {
+    flex: 1,
+  },
+  tagsContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  tagsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    paddingBottom: 20,
   },
-  criteriaPill: {
+  tagPill: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
@@ -325,7 +317,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    minHeight: 56, // Fixed height to prevent button growing
+    minHeight: 56,
   },
   buttonIcon: {
     marginRight: 8,

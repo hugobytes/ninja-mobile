@@ -22,10 +22,12 @@ export interface Movie {
   directors: string[];
   cast: string[];
   genres: string[];
-  tropes: string[];
-  moods: string[];
-  acclaims: string[];
-  origins: string[];
+  tags: string[]; // New unified tags field
+  // Legacy fields for backward compatibility
+  tropes?: string[];
+  moods?: string[];
+  acclaims?: string[];
+  origins?: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
   overview: string;
@@ -50,10 +52,12 @@ export interface TVShow {
   creators: string[];
   cast: string[];
   genres: string[];
-  tropes: string[];
-  moods: string[];
-  acclaims: string[];
-  origins: string[];
+  tags: string[]; // New unified tags field
+  // Legacy fields for backward compatibility
+  tropes?: string[];
+  moods?: string[];
+  acclaims?: string[];
+  origins?: string[];
   imdb_rating: number;
   rotten_tomatoes_rating: number;
   overview: string;
@@ -100,6 +104,8 @@ export interface RandomTVShowsResponse {
 export interface RandomContentParams {
   limit?: number;
   genres?: string;
+  tags?: string; // New unified tags parameter
+  // Legacy parameters for backward compatibility
   tropes?: string;
   moods?: string;
   acclaims?: string;
@@ -128,6 +134,15 @@ export interface GetSavedContentResponse {
   };
 }
 
+export interface Tag {
+  id: number;
+  name: string;
+}
+
+export interface TagsResponse {
+  tags: Tag[];
+}
+
 export const api = {
   async createUser(): Promise<CreateUserResponse> {
     try {
@@ -152,16 +167,33 @@ export const api = {
     }
   },
 
+  async getTags(): Promise<TagsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/tags`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+      throw error;
+    }
+  },
+
   async getRandomMovies(params: RandomContentParams = {}, accessKey?: string): Promise<RandomMoviesResponse> {
     try {
       const searchParams = new URLSearchParams();
       
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
-      if (params.tropes) searchParams.append('tropes', params.tropes);
-      if (params.moods) searchParams.append('moods', params.moods);
-      if (params.acclaims) searchParams.append('acclaims', params.acclaims);
-      if (params.origins) searchParams.append('origins', params.origins);
+      if (params.tags) searchParams.append('tags', params.tags);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 
@@ -197,10 +229,7 @@ export const api = {
       
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
-      if (params.tropes) searchParams.append('tropes', params.tropes);
-      if (params.moods) searchParams.append('moods', params.moods);
-      if (params.acclaims) searchParams.append('acclaims', params.acclaims);
-      if (params.origins) searchParams.append('origins', params.origins);
+      if (params.tags) searchParams.append('tags', params.tags);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 

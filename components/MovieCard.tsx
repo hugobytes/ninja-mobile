@@ -5,6 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
+import React, { useState } from 'react';
 
 type ContentItem = Movie | TVShow;
 
@@ -218,81 +219,8 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
           </ThemedView>
         )}
 
-        {/* Tropes */}
-        {movie.tropes?.length > 0 && (
-          <ThemedView style={styles.criteriaSection}>
-            <ThemedText style={styles.criteriaLabel}>Tropes:</ThemedText>
-            <ThemedView style={styles.fullscreenGenresContainer}>
-              {movie.tropes.slice(0, 4).map((trope) => (
-                <ThemedView 
-                  key={trope}
-                  style={[styles.fullscreenGenreTag, { borderColor: '#9333EA40' }]}
-                >
-                  <ThemedText style={[styles.fullscreenGenreText, { color: '#9333EA' }]}>
-                    {trope}
-                  </ThemedText>
-                </ThemedView>
-              ))}
-            </ThemedView>
-          </ThemedView>
-        )}
-
-        {/* Moods */}
-        {movie.moods?.length > 0 && (
-          <ThemedView style={styles.criteriaSection}>
-            <ThemedText style={styles.criteriaLabel}>Moods:</ThemedText>
-            <ThemedView style={styles.fullscreenGenresContainer}>
-              {movie.moods.slice(0, 4).map((mood) => (
-                <ThemedView 
-                  key={mood}
-                  style={[styles.fullscreenGenreTag, { borderColor: '#059C6040' }]}
-                >
-                  <ThemedText style={[styles.fullscreenGenreText, { color: '#059C60' }]}>
-                    {mood}
-                  </ThemedText>
-                </ThemedView>
-              ))}
-            </ThemedView>
-          </ThemedView>
-        )}
-
-        {/* Acclaims */}
-        {movie.acclaims?.length > 0 && (
-          <ThemedView style={styles.criteriaSection}>
-            <ThemedText style={styles.criteriaLabel}>Acclaims:</ThemedText>
-            <ThemedView style={styles.fullscreenGenresContainer}>
-              {movie.acclaims.slice(0, 4).map((acclaim) => (
-                <ThemedView 
-                  key={acclaim}
-                  style={[styles.fullscreenGenreTag, { borderColor: '#DC262640' }]}
-                >
-                  <ThemedText style={[styles.fullscreenGenreText, { color: '#DC2626' }]}>
-                    {acclaim}
-                  </ThemedText>
-                </ThemedView>
-              ))}
-            </ThemedView>
-          </ThemedView>
-        )}
-
-        {/* Origins */}
-        {movie.origins?.length > 0 && (
-          <ThemedView style={styles.criteriaSection}>
-            <ThemedText style={styles.criteriaLabel}>Origins:</ThemedText>
-            <ThemedView style={styles.fullscreenGenresContainer}>
-              {movie.origins.slice(0, 4).map((origin) => (
-                <ThemedView 
-                  key={origin}
-                  style={[styles.fullscreenGenreTag, { borderColor: '#EA580C40' }]}
-                >
-                  <ThemedText style={[styles.fullscreenGenreText, { color: '#EA580C' }]}>
-                    {origin}
-                  </ThemedText>
-                </ThemedView>
-              ))}
-            </ThemedView>
-          </ThemedView>
-        )}
+        {/* Tags - New unified tags section with shuffle button */}
+        <TagsSection movie={movie} />
         
         {movie.watch_providers?.stream?.length > 0 && (
           <ThemedView style={styles.fullscreenStreamingContainer}>
@@ -321,6 +249,59 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
         )}
       </ThemedView>
     </TouchableOpacity>
+  );
+}
+
+// Tags Section Component with shuffle functionality
+function TagsSection({ movie }: { movie: ContentItem }) {
+  const [shuffledTags, setShuffledTags] = useState<string[]>([]);
+  const tintColor = useThemeColor({}, 'tint');
+  
+  // Initialize shuffled tags when component mounts or movie changes
+  React.useEffect(() => {
+    if (movie.tags && movie.tags.length > 0) {
+      setShuffledTags([...movie.tags].sort(() => Math.random() - 0.5));
+    }
+  }, [movie.tags]);
+  
+  const shuffleTags = () => {
+    if (movie.tags && movie.tags.length > 0) {
+      setShuffledTags([...movie.tags].sort(() => Math.random() - 0.5));
+    }
+  };
+  
+  if (!movie.tags || movie.tags.length === 0) {
+    return null;
+  }
+  
+  return (
+    <ThemedView style={styles.criteriaSection}>
+      <ThemedView style={styles.tagsHeader}>
+        <ThemedText style={styles.criteriaLabel}>Tags:</ThemedText>
+        <TouchableOpacity 
+          style={[styles.shuffleButton, { borderColor: tintColor }]} 
+          onPress={shuffleTags}
+          activeOpacity={0.7}
+        >
+          <IconSymbol name="shuffle" size={14} color={tintColor} />
+          <ThemedText style={[styles.shuffleButtonText, { color: tintColor }]}>
+            Shuffle
+          </ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+      <ThemedView style={styles.fullscreenGenresContainer}>
+        {shuffledTags.slice(0, 8).map((tag, index) => (
+          <ThemedView 
+            key={`${tag}-${index}`}
+            style={[styles.fullscreenGenreTag, { borderColor: '#6366F140' }]}
+          >
+            <ThemedText style={[styles.fullscreenGenreText, { color: '#6366F1' }]}>
+              {tag}
+            </ThemedText>
+          </ThemedView>
+        ))}
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -528,5 +509,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginLeft: 4,
     fontWeight: '500',
+  },
+  tagsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  shuffleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  shuffleButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

@@ -15,12 +15,8 @@ type ContentItem = Movie | TVShow;
 const { height } = Dimensions.get('window');
 
 export default function ExploreScreen() {
-  const { genres, tropes, moods, acclaims, origins, type } = useLocalSearchParams<{ 
-    genres: string; 
-    tropes: string; 
-    moods: string; 
-    acclaims: string; 
-    origins: string; 
+  const { tags, type } = useLocalSearchParams<{ 
+    tags: string;
     type: string 
   }>();
   const [content, setContent] = useState<ContentItem[]>([]);
@@ -46,20 +42,12 @@ export default function ExploreScreen() {
         const response = type === 'movie' 
           ? await api.getRandomMovies({
               limit: 20,
-              genres,
-              tropes,
-              moods,
-              acclaims,
-              origins,
+              tags,
               country: 'GB'
             }, accessKey || undefined)
           : await api.getRandomTVShows({
               limit: 20,
-              genres,
-              tropes,
-              moods,
-              acclaims,
-              origins,
+              tags,
               country: 'GB'
             }, accessKey || undefined);
 
@@ -95,7 +83,7 @@ export default function ExploreScreen() {
     return () => {
       isMounted = false;
     };
-  }, [genres, tropes, moods, acclaims, origins]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tags]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMoreContent = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -108,21 +96,13 @@ export default function ExploreScreen() {
       const response = type === 'movie'
         ? await api.getRandomMovies({
             limit: 1,
-            genres,
-            tropes,
-            moods,
-            acclaims,
-            origins,
+            tags,
             exclude_imdbids: excludeIds,
             country: 'GB'
           }, accessKey || undefined)
         : await api.getRandomTVShows({
             limit: 1,
-            genres,
-            tropes,
-            moods,
-            acclaims,
-            origins,
+            tags,
             exclude_imdbids: excludeIds,
             country: 'GB'
           }, accessKey || undefined);
@@ -145,7 +125,7 @@ export default function ExploreScreen() {
     } finally {
       setLoadingMore(false);
     }
-  }, [content, genres, loadingMore, hasMore, type]);
+  }, [content, tags, loadingMore, hasMore, type]);
 
   const handleScroll = useCallback((event: any) => {
     const { contentOffset } = event.nativeEvent;
@@ -215,7 +195,7 @@ export default function ExploreScreen() {
             <IconSymbol name="checkmark.circle.fill" size={48} color={tintColor} style={styles.endIcon} />
             <ThemedText style={styles.endTitle}>You&apos;ve reached the end!</ThemedText>
             <ThemedText style={styles.endSubtitle}>
-              No more {type === 'movie' ? 'movies' : 'TV shows'} for your selected genres.
+              No more {type === 'movie' ? 'movies' : 'TV shows'} for your selected tags.
             </ThemedText>
             <TouchableOpacity
               style={[styles.backButton, { backgroundColor: tintColor }]}
@@ -223,7 +203,7 @@ export default function ExploreScreen() {
               activeOpacity={0.8}
             >
               <IconSymbol name="arrow.left" size={20} color="white" style={styles.backButtonIcon} />
-              <ThemedText style={styles.backButtonText}>Back to Genres</ThemedText>
+              <ThemedText style={styles.backButtonText}>Back to Tags</ThemedText>
             </TouchableOpacity>
           </ThemedView>
         </ThemedView>
@@ -258,16 +238,11 @@ export default function ExploreScreen() {
   };
 
   // Build selected criteria display
-  const selectedCriteria: string[] = [];
-  if (genres) selectedCriteria.push(...genres.split(','));
-  if (tropes) selectedCriteria.push(...tropes.split(','));
-  if (moods) selectedCriteria.push(...moods.split(','));
-  if (acclaims) selectedCriteria.push(...acclaims.split(','));
-  if (origins) selectedCriteria.push(...origins.split(','));
+  const selectedTags: string[] = tags ? tags.split(',') : [];
   
   const title = type === 'movie' ? 'Movies' : 'TV Shows';
-  const criteriaDisplay = selectedCriteria.length > 0 
-    ? selectedCriteria.slice(0, 2).join(', ') + (selectedCriteria.length > 2 ? ` +${selectedCriteria.length - 2}` : '')
+  const criteriaDisplay = selectedTags.length > 0 
+    ? selectedTags.slice(0, 2).join(', ') + (selectedTags.length > 2 ? ` +${selectedTags.length - 2}` : '')
     : 'All';
 
   return (
