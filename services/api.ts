@@ -5,7 +5,10 @@ const API_BASE_URL = isDevelopment
   ? Platform.OS === 'ios' 
     ? 'http://localhost:3000' 
     : 'http://10.0.2.2:3000'  // Android emulator localhost
-  : 'https://bingerninja.com';
+  : 'https://www.bingerninja.com';
+
+let API_BASE_URL_OVERRIDE = null;
+API_BASE_URL_OVERRIDE = 'https://www.bingerninja.com';
 
 export interface CreateUserResponse {
   success: boolean;
@@ -147,7 +150,8 @@ export interface TagsResponse {
 export const api = {
   async createUser(): Promise<CreateUserResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/users`, {
+      const baseUrl = API_BASE_URL_OVERRIDE ? API_BASE_URL_OVERRIDE : API_BASE_URL;
+      const response = await fetch(`${baseUrl}/api/v1/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

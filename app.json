@@ -39,6 +39,12 @@
         "projectId": "7f059a19-3fa3-4423-9c24-b73fc6379347"
       }
     },
-    "owner": "hugobytes"
+    "owner": "hugobytes",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7f059a19-3fa3-4423-9c24-b73fc6379347"
+    }
   }
 }

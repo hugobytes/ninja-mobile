@@ -70,6 +70,7 @@ export function FilterModal({ visible, onClose, type, onGenreChange, selectedGen
           <TouchableOpacity
               style={[styles.clearAllButton]}
               onPress={clearAllFilters}
+              activeOpacity={0.8}
           >
             <ThemedText style={styles.clearAllButtonText}>Clear All</ThemedText>
           </TouchableOpacity>
@@ -77,6 +78,7 @@ export function FilterModal({ visible, onClose, type, onGenreChange, selectedGen
           <TouchableOpacity
               style={[styles.searchButton, { backgroundColor: Colors.redRed }]}
               onPress={onClose}
+              activeOpacity={0.8}
           >
             <IconSymbol name="magnifyingglass" size={20} color="white" style={styles.buttonIcon} />
             <ThemedText style={styles.searchButtonText}>Search</ThemedText>
