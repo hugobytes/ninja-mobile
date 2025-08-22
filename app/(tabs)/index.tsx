@@ -1,30 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { ExploreList } from '@/components/ExploreList';
 import { FilterModal } from '@/components/FilterModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { ThemedText } from '@/components/ThemedText';
 import { Colors } from "@/constants/Colors";
 import { Movie, TVShow } from '@/services/api';
-import { useFiltersStore, useMovieFilters } from '@/lib/filters';
-import {BlurView} from "expo-blur";
+import { useMovieFilters } from '@/lib/filters';
 
 export default function MoviesScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const router = useRouter();
   
   const movieFilters = useMovieFilters();
-  const { fetchAvailableFilters, setMovieStreamProviders, setMovieTags } = useFiltersStore();
 
-  useEffect(() => {
-    // Fetch available filters when component mounts
-    fetchAvailableFilters();
-  }, [fetchAvailableFilters]);
-
-  const handleGenreChange = (tags: string[]) => {
-    setMovieTags(tags);
+  const handleGenreChange = () => {
+    // This is handled automatically by FilterSelection component
   };
 
   const handleMoviePress = (item: Movie | TVShow) => {
@@ -49,20 +41,20 @@ export default function MoviesScreen() {
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={100} tint="light" style={styles.headerOverlay}>
+      <View style={styles.headerOverlay}>
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowFilterModal(true)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <ThemedText>Any genre</ThemedText>
-          <IconSymbol 
+          <IconSymbol
+            style={{opacity: 0.75}}
             name={hasActiveFilters ? "line.horizontal.3.decrease.circle.fill" : "line.horizontal.3.decrease.circle"} 
-            size={28} 
+            size={32}
             color="white" 
           />
         </TouchableOpacity>
-      </BlurView>
+      </View>
 
       <ExploreList
         type="movie"
@@ -95,7 +87,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     zIndex: 1000,
     backgroundColor: 'transparent',

@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Movie, TVShow } from '@/services/api';
 import { CUSTOM_TAB_BAR_HEIGHT } from '@/constants/TabBar';
-import Animated from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,14 +25,12 @@ export function ExploreMovieCard({ movie, onPress }: ExploreMovieCardProps) {
       activeOpacity={0.95}
     >
       {/* Full Screen Poster - FULL DEVICE HEIGHT */}
-      <Animated.View sharedTransitionTag={`poster-${movie.id}`}>
-        <Image
-          source={{ uri: movie.poster_url }}
-          style={styles.poster}
-          contentFit="cover"
-          placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-        />
-      </Animated.View>
+      <Image
+        source={{ uri: movie.poster_url }}
+        style={styles.poster}
+        contentFit="cover"
+        placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+      />
     </TouchableOpacity>
   );
 }

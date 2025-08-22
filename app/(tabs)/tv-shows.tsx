@@ -1,49 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { ExploreList } from '@/components/ExploreList';
 import { FilterModal } from '@/components/FilterModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from "@/constants/Colors";
-import { TVShow } from '@/services/api';
-import { useFiltersStore, useTVFilters } from '@/lib/filters';
+import { TVShow, Movie } from '@/services/api';
+import { useTVFilters } from '@/lib/filters';
 
 export default function TVShowsScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const router = useRouter();
   
   const tvFilters = useTVFilters();
-  const { fetchAvailableFilters, setTVStreamProviders, setTVTags } = useFiltersStore();
-  
-  const tintColor = useThemeColor({}, 'tint');
 
-  useEffect(() => {
-    // Fetch available filters when component mounts
-    fetchAvailableFilters();
-  }, [fetchAvailableFilters]);
-
-  const handleGenreChange = (tags: string[]) => {
-    setTVTags(tags);
+  const handleGenreChange = () => {
+    // This is handled automatically by FilterSelection component
   };
 
-  const handleTVShowPress = (tvShow: TVShow) => {
+  const handleTVShowPress = (item: TVShow | Movie) => {
     router.push({
       pathname: '/movie/[id]',
       params: {
-        id: tvShow.id.toString(),
-        movieData: JSON.stringify(tvShow)
+        id: item.id.toString(),
+        movieData: JSON.stringify(item)
       }
     });
   };
 
-  const handleWatchlistPress = (tvShow: TVShow) => {
-    console.log('Add to watchlist:', tvShow.title);
+  const handleWatchlistPress = (item: TVShow | Movie) => {
+    console.log('Add to watchlist:', item.title);
   };
 
-  const isTVShowInWatchlist = (tvShow: TVShow) => {
+  const isTVShowInWatchlist = (item: TVShow | Movie) => {
     return false; // TODO: Implement watchlist logic
   };
 
@@ -52,26 +43,14 @@ export default function TVShowsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerOverlay}>
-        <View style={styles.headerLeft}>
-          <ThemedText style={styles.title}>TV Shows</ThemedText>
-          {hasActiveFilters && (
-            <ThemedText style={styles.subtitle}>
-              {[
-                ...((tvFilters?.streamProviders?.length > 0) ? [`${tvFilters.streamProviders.length} providers`] : []),
-                ...((tvFilters?.tags?.length > 0) ? [`${tvFilters.tags.length} tags`] : [])
-              ].join(' • ')}
-            </ThemedText>
-          )}
-        </View>
-        
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowFilterModal(true)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
           <IconSymbol 
             name={hasActiveFilters ? "line.horizontal.3.decrease.circle.fill" : "line.horizontal.3.decrease.circle"} 
-            size={28} 
+            size={32}
             color="white" 
           />
         </TouchableOpacity>
@@ -108,8 +87,8 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
     zIndex: 1000,
     backgroundColor: 'transparent',
   },

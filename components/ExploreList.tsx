@@ -98,11 +98,25 @@ export function ExploreList({ type, streamProviders, tags, onItemPress, onWatchl
       );
     }
 
+    const hasFilters = (streamProviders && streamProviders.length > 0) || (tags && tags.length > 0);
+    
     return (
       <View style={styles.centerContainer}>
-        <ThemedText style={styles.emptyText}>
+        <ThemedText style={styles.emptyTitleText}>
+          🙁
+        </ThemedText>
+        <ThemedText style={styles.emptyTitleText}>
           No {type === 'movie' ? 'movies' : 'TV shows'} found
         </ThemedText>
+        {hasFilters ? (
+          <ThemedText style={styles.emptyText}>
+            Play with filters to see more results
+          </ThemedText>
+        ) : (
+          <ThemedText style={styles.emptyText}>
+            No content available at the moment
+          </ThemedText>
+        )}
       </View>
     );
   };
@@ -165,6 +179,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.7,
     textAlign: 'center',
+  },
+  emptyTitleText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,

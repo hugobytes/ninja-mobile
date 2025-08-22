@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { api, Tag } from '@/services/api';
 import { useFiltersStore, useAvailableFilters, useMovieFilters, useTVFilters } from '@/lib/filters';
 
 interface TagsSelectionProps {
@@ -15,19 +12,20 @@ interface TagsSelectionProps {
   selectedGenres?: string[];
 }
 
-export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: TagsSelectionProps) {
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [displayedTags, setDisplayedTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
   const { streamProviders, tags, isLoadingTags } = useAvailableFilters();
   const { 
+    fetchAvailableFilters,
     setMovieStreamProviders, 
     setTVStreamProviders, 
     setMovieTags, 
     setTVTags 
   } = useFiltersStore();
+
+  useEffect(() => {
+    // Fetch available filters when component mounts
+    fetchAvailableFilters();
+  }, [fetchAvailableFilters]);
   
   // Get current filters using the selector hooks instead of getState()
   const movieFilters = useMovieFilters();
@@ -36,17 +34,6 @@ export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: Tag
   
   const tintColor = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
-
-  // Use tags from store
-  useEffect(() => {
-    if (tags && tags.length > 0) {
-      setAllTags(tags);
-      setDisplayedTags(tags);
-      setLoading(false);
-    } else {
-      setLoading(isLoadingTags);
-    }
-  }, [tags, isLoadingTags]);
 
   const toggleStreamProvider = (provider: string) => {
     const currentStreamProviders = currentFilters?.streamProviders || [];
@@ -76,40 +63,12 @@ export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: Tag
     onGenreChange?.(newSelection);
   };
 
-  const clearAllFilters = () => {
-    if (type === 'movie') {
-      setMovieStreamProviders([]);
-      setMovieTags([]);
-    } else {
-      setTVStreamProviders([]);
-      setTVTags([]);
-    }
-    onGenreChange?.([]);
-  };
-
-
-  if (loading) {
+  if (isLoadingTags || !tags) {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={tintColor} />
-          <ThemedText style={styles.loadingText}>Loading tags...</ThemedText>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container} edges={[]}>
-        <View style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity 
-            style={[styles.retryButton, { backgroundColor: tintColor }]} 
-            onPress={() => window.location.reload()}
-          >
-            <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
-          </TouchableOpacity>
+          <ThemedText style={styles.loadingText}>Loading filters...</ThemedText>
         </View>
       </SafeAreaView>
     );
@@ -158,7 +117,7 @@ export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: Tag
               Genres & Tags
             </ThemedText>
             <View style={styles.tagsGrid}>
-              {displayedTags.map((tag) => {
+              {tags.map((tag) => {
                 const isSelected = currentFilters?.tags?.includes(tag.name) || false;
                 return (
                   <TouchableOpacity
@@ -185,24 +144,6 @@ export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: Tag
             </View>
           </View>
         </ScrollView>
-
-        {/* Bottom action buttons */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity 
-            style={[styles.clearAllButton]} 
-            onPress={clearAllFilters}
-          >
-            <ThemedText style={styles.clearAllButtonText}>Clear All</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.searchButton, { backgroundColor: '#FF3B30' }]} 
-            onPress={() => {/* Navigation handled by parent component */}}
-          >
-            <IconSymbol name="magnifyingglass" size={20} color="white" style={styles.buttonIcon} />
-            <ThemedText style={styles.searchButtonText}>Search</ThemedText>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -225,28 +166,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.7,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -259,23 +178,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  shuffleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderRadius: 16,
-    gap: 4,
-  },
-  shuffleText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   clearButton: {
     paddingHorizontal: 12,
@@ -319,46 +221,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  bottomActions: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  clearAllButton: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
+  infoContainer: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#90caf9',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
   },
-  clearAllButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    opacity: 0.7,
-  },
-  searchButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  searchButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonIcon: {
-    marginRight: 0,
+  infoText: {
+    fontSize: 14,
+    color: '#0277bd',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   exploreButton: {
     flexDirection: 'row',

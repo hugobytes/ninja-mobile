@@ -3,20 +3,21 @@ import { StyleSheet, ScrollView, TouchableOpacity, Dimensions, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import Animated from 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
+import { useWatchlist } from '@/contexts/WatchlistContext';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 export default function MovieDetailsScreen() {
-  const { id, movieData } = useLocalSearchParams();
+  const { movieData } = useLocalSearchParams();
   const router = useRouter();
   
   const tintColor = useThemeColor({}, 'tint');
   const backgroundColor = useThemeColor({}, 'background');
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, loading } = useWatchlist();
   
   // Parse the movie data from params
   const movie: Movie | TVShow = movieData ? JSON.parse(movieData as string) : null;
@@ -31,9 +32,18 @@ export default function MovieDetailsScreen() {
     );
   }
 
-  const handleWatchlistPress = () => {
-    console.log('Add to watchlist:', movie.title);
-    // TODO: Implement watchlist functionality
+  const handleWatchlistPress = async () => {
+    if (!movie) return;
+    
+    try {
+      if (isInWatchlist(movie)) {
+        await removeFromWatchlist(movie);
+      } else {
+        await addToWatchlist(movie);
+      }
+    } catch (error) {
+      console.error('Watchlist operation failed:', error);
+    }
   };
 
   return (
@@ -52,8 +62,13 @@ export default function MovieDetailsScreen() {
           style={styles.watchlistButton}
           onPress={handleWatchlistPress}
           activeOpacity={0.7}
+          disabled={loading}
         >
-          <IconSymbol name="heart" size={24} color="white" />
+          <IconSymbol 
+            name={isInWatchlist(movie) ? "heart.fill" : "heart"} 
+            size={24} 
+            color={isInWatchlist(movie) ? "#FF3B30" : "white"} 
+          />
         </TouchableOpacity>
       </View>
 
@@ -64,14 +79,12 @@ export default function MovieDetailsScreen() {
       >
         {/* Hero Poster */}
         <View style={styles.heroContainer}>
-          <Animated.View sharedTransitionTag={`poster-${movie.id}`}>
-            <Image
-              source={{ uri: movie.poster_url }}
-              style={styles.heroPoster}
-              contentFit="cover"
-              placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-            />
-          </Animated.View>
+          <Image
+            source={{ uri: movie.poster_url }}
+            style={styles.heroPoster}
+            contentFit="cover"
+            placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+          />
           
           {/* Overlay gradient */}
           <View style={styles.heroOverlay}>

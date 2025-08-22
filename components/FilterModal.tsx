@@ -3,8 +3,9 @@ import { Modal, TouchableOpacity, StyleSheet, ScrollView, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { GenreChecklist } from '@/components/GenreChecklist';
+import { FilterSelection } from '@/components/FilterSelection';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useFiltersStore } from '@/lib/filters';
 import {Colors} from "@/constants/Colors";
 
 interface FilterModalProps {
@@ -18,6 +19,23 @@ interface FilterModalProps {
 export function FilterModal({ visible, onClose, type, onGenreChange, selectedGenres }: FilterModalProps) {
   const tintColor = useThemeColor({}, 'tint');
   const borderColor = useThemeColor({}, 'text');
+  const { 
+    setMovieStreamProviders, 
+    setTVStreamProviders, 
+    setMovieTags, 
+    setTVTags 
+  } = useFiltersStore();
+
+  const clearAllFilters = () => {
+    if (type === 'movie') {
+      setMovieStreamProviders([]);
+      setMovieTags([]);
+    } else {
+      setTVStreamProviders([]);
+      setTVTags([]);
+    }
+    onGenreChange?.([]);
+  };
 
   return (
     <Modal
@@ -28,7 +46,7 @@ export function FilterModal({ visible, onClose, type, onGenreChange, selectedGen
     >
       <SafeAreaView style={[styles.container]}>
         <View style={styles.header}>
-          <ThemedText style={styles.headerLeft}>Filters</ThemedText>
+          <ThemedText type="title">Filters</ThemedText>
           <TouchableOpacity
             style={[styles.closeButton, { borderColor: borderColor + '40' }]}
             onPress={onClose}
@@ -39,12 +57,32 @@ export function FilterModal({ visible, onClose, type, onGenreChange, selectedGen
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <GenreChecklist 
+
+          <FilterSelection 
             type={type} 
             onGenreChange={onGenreChange}
             selectedGenres={selectedGenres}
           />
         </ScrollView>
+
+        {/* Bottom action buttons */}
+        <View style={styles.bottomActions}>
+          <TouchableOpacity
+              style={[styles.clearAllButton]}
+              onPress={clearAllFilters}
+          >
+            <ThemedText style={styles.clearAllButtonText}>Clear All</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+              style={[styles.searchButton, { backgroundColor: Colors.redRed }]}
+              onPress={onClose}
+          >
+            <IconSymbol name="magnifyingglass" size={20} color="white" style={styles.buttonIcon} />
+            <ThemedText style={styles.searchButtonText}>Search</ThemedText>
+          </TouchableOpacity>
+        </View>
+
       </SafeAreaView>
     </Modal>
   );
@@ -60,17 +98,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    gap: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
     backgroundColor: Colors.surface,
-  },
-  headerLeft: {
-    flex: 1,
-    gap: 4,
-    fontSize: 32
   },
   closeButton: {
     width: 36,
@@ -82,5 +113,44 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  bottomActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  clearAllButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearAllButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    opacity: 0.7,
+  },
+  searchButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonIcon: {
+    marginRight: 0,
   },
 });
