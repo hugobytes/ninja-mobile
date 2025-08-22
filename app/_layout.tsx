@@ -36,10 +36,10 @@ export default function RootLayout() {
       <WatchlistProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="explore" options={{ headerShown: true }} />
+          <Stack.Screen name="movie/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </WatchlistProvider>
     </ThemeProvider>
   );

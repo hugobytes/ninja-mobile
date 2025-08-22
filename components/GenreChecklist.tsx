@@ -3,86 +3,98 @@ import { StyleSheet, TouchableOpacity, ScrollView, View, ActivityIndicator } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { api, Tag } from '@/services/api';
+import { useFiltersStore, useAvailableFilters, useMovieFilters, useTVFilters } from '@/lib/filters';
 
 interface TagsSelectionProps {
   type: 'movie' | 'tv';
-  onTagsChange?: (selectedTags: string[]) => void;
+  onGenreChange?: (selectedGenres: string[]) => void;
+  selectedGenres?: string[];
 }
 
-export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
+export function GenreChecklist({ type, onGenreChange, selectedGenres = [] }: TagsSelectionProps) {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [displayedTags, setDisplayedTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { streamProviders, tags, isLoadingTags } = useAvailableFilters();
+  const { 
+    setMovieStreamProviders, 
+    setTVStreamProviders, 
+    setMovieTags, 
+    setTVTags 
+  } = useFiltersStore();
+  
+  // Get current filters using the selector hooks instead of getState()
+  const movieFilters = useMovieFilters();
+  const tvFilters = useTVFilters();
+  const currentFilters = type === 'movie' ? movieFilters : tvFilters;
   
   const tintColor = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
 
-  // Fetch tags on component mount
+  // Use tags from store
   useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        setLoading(true);
-        const response = await api.getTags();
-        const shuffledTags = [...response.tags].sort(() => Math.random() - 0.5);
-        setAllTags(response.tags);
-        setDisplayedTags(shuffledTags);
-        setError(null);
-      } catch (err) {
-        setError('Failed to load tags');
-        console.error('Error fetching tags:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (tags && tags.length > 0) {
+      setAllTags(tags);
+      setDisplayedTags(tags);
+      setLoading(false);
+    } else {
+      setLoading(isLoadingTags);
+    }
+  }, [tags, isLoadingTags]);
 
-    fetchTags();
-  }, []);
-
-  // Shuffle the displayed tags
-  const shuffleTags = () => {
-    const shuffled = [...allTags].sort(() => Math.random() - 0.5);
-    setDisplayedTags(shuffled);
+  const toggleStreamProvider = (provider: string) => {
+    const currentStreamProviders = currentFilters?.streamProviders || [];
+    const newSelection = currentStreamProviders.includes(provider)
+      ? currentStreamProviders.filter(p => p !== provider)
+      : [...currentStreamProviders, provider];
+    
+    if (type === 'movie') {
+      setMovieStreamProviders(newSelection);
+    } else {
+      setTVStreamProviders(newSelection);
+    }
   };
 
   const toggleTag = (tagName: string) => {
-    const newSelection = selectedTags.includes(tagName)
-      ? selectedTags.filter(tag => tag !== tagName)
-      : [...selectedTags, tagName];
+    const currentTags = currentFilters?.tags || [];
+    const newSelection = currentTags.includes(tagName)
+      ? currentTags.filter(tag => tag !== tagName)
+      : [...currentTags, tagName];
     
-    setSelectedTags(newSelection);
-    onTagsChange?.(newSelection);
-  };
-
-  const clearAllTags = () => {
-    setSelectedTags([]);
-    onTagsChange?.([]);
-  };
-
-  const handleExplore = () => {
-    const params: any = { type };
-    if (selectedTags.length > 0) {
-      params.tags = selectedTags.join(',');
+    if (type === 'movie') {
+      setMovieTags(newSelection);
+    } else {
+      setTVTags(newSelection);
     }
-
-    router.push({
-      pathname: '/explore',
-      params
-    });
+    
+    onGenreChange?.(newSelection);
   };
+
+  const clearAllFilters = () => {
+    if (type === 'movie') {
+      setMovieStreamProviders([]);
+      setMovieTags([]);
+    } else {
+      setTVStreamProviders([]);
+      setTVTags([]);
+    }
+    onGenreChange?.([]);
+  };
+
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
-        <ThemedView style={styles.loadingContainer}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={tintColor} />
           <ThemedText style={styles.loadingText}>Loading tags...</ThemedText>
-        </ThemedView>
+        </View>
       </SafeAreaView>
     );
   }
@@ -90,7 +102,7 @@ export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
   if (error) {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
-        <ThemedView style={styles.errorContainer}>
+        <View style={styles.errorContainer}>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
           <TouchableOpacity 
             style={[styles.retryButton, { backgroundColor: tintColor }]} 
@@ -98,108 +110,100 @@ export function GenreChecklist({ type, onTagsChange }: TagsSelectionProps) {
           >
             <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <ThemedView style={styles.content}>
-        {/* Header with shuffle button */}
-        <ThemedView style={styles.header}>
-          <ThemedText style={[styles.title, { color: tintColor }]}>
-            All Tags ({selectedTags.length})
-          </ThemedText>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity 
-              style={[styles.shuffleButton, { borderColor: tintColor }]} 
-              onPress={shuffleTags}
-            >
-              <IconSymbol name="shuffle" size={16} color={tintColor} />
-              <ThemedText style={[styles.shuffleText, { color: tintColor }]}>Shuffle</ThemedText>
-            </TouchableOpacity>
-            {selectedTags.length > 0 && (
-              <TouchableOpacity 
-                style={[styles.clearButton, { backgroundColor: tintColor + '20' }]} 
-                onPress={clearAllTags}
-              >
-                <ThemedText style={[styles.clearText, { color: tintColor }]}>Clear All</ThemedText>
-              </TouchableOpacity>
-            )}
-          </View>
-        </ThemedView>
-
-        {/* Tags grid */}
+      <View style={styles.content}>
         <ScrollView style={styles.tagsContainer} contentContainerStyle={styles.tagsContent}>
-          <ThemedView style={styles.tagsGrid}>
-            {displayedTags.map((tag) => {
-              const isSelected = selectedTags.includes(tag.name);
-              return (
-                <TouchableOpacity
-                  key={tag.id}
-                  style={[
-                    styles.tagPill,
-                    { borderColor: textColor + '30' },
-                    isSelected && { backgroundColor: tintColor, borderColor: tintColor }
-                  ]}
-                  onPress={() => toggleTag(tag.name)}
-                  activeOpacity={0.7}
-                >
-                  <ThemedText
+          {/* Stream Providers Section */}
+          <View style={styles.section}>
+            <ThemedText style={[styles.sectionTitle, { color: tintColor }]}>
+              Stream Providers
+            </ThemedText>
+            <View style={styles.tagsGrid}>
+              {streamProviders.map((provider) => {
+                const isSelected = currentFilters?.streamProviders?.includes(provider) || false;
+                return (
+                  <TouchableOpacity
+                    key={provider}
                     style={[
-                      styles.pillText,
-                      isSelected && styles.selectedPillText
+                      styles.tagPill,
+                      { borderColor: textColor + '30' },
+                      isSelected && { backgroundColor: tintColor, borderColor: tintColor }
                     ]}
+                    onPress={() => toggleStreamProvider(provider)}
+                    activeOpacity={0.7}
                   >
-                    {tag.name}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-          </ThemedView>
+                    <ThemedText
+                      style={[
+                        styles.pillText,
+                        isSelected && styles.selectedPillText
+                      ]}
+                    >
+                      {provider}
+                    </ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Tags Section */}
+          <View style={styles.section}>
+            <ThemedText style={[styles.sectionTitle, { color: tintColor }]}>
+              Genres & Tags
+            </ThemedText>
+            <View style={styles.tagsGrid}>
+              {displayedTags.map((tag) => {
+                const isSelected = currentFilters?.tags?.includes(tag.name) || false;
+                return (
+                  <TouchableOpacity
+                    key={tag.id}
+                    style={[
+                      styles.tagPill,
+                      { borderColor: textColor + '30' },
+                      isSelected && { backgroundColor: tintColor, borderColor: tintColor }
+                    ]}
+                    onPress={() => toggleTag(tag.name)}
+                    activeOpacity={0.7}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.pillText,
+                        isSelected && styles.selectedPillText
+                      ]}
+                    >
+                      {tag.name}
+                    </ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </ScrollView>
 
-        {/* Explore button */}
-        <TouchableOpacity
-          style={[styles.exploreButton, { backgroundColor: 'blue' }]}
-          onPress={handleExplore}
-          activeOpacity={0.8}
-        >
-          <IconSymbol name="play.fill" size={20} color="white" style={styles.buttonIcon} />
-          <View style={styles.buttonTextContainer}>
-            <ThemedText style={[styles.exploreButtonTitle, { color: 'white' }]}>
-              Explore {type === 'movie' ? 'Movies' : 'TV Shows'}
-            </ThemedText>
-            <ThemedText style={[styles.exploreButtonSubtitle, { color: 'white' }]} numberOfLines={1}>
-              {selectedTags.length > 0 ? (() => {
-                const maxLength = 40;
-                const itemsText = selectedTags.join(', ');
-                if (itemsText.length <= maxLength) {
-                  return itemsText;
-                }
-                
-                let truncatedText = '';
-                let itemCount = 0;
-                
-                for (const tag of selectedTags) {
-                  const testText = truncatedText ? `${truncatedText}, ${tag}` : tag;
-                  if (testText.length > maxLength - 15) {
-                    break;
-                  }
-                  truncatedText = testText;
-                  itemCount++;
-                }
-                
-                const remainingCount = selectedTags.length - itemCount;
-                return remainingCount > 0 
-                  ? `${truncatedText}... +${remainingCount} more`
-                  : truncatedText;
-              })() : 'Any'}
-            </ThemedText>
-          </View>
-        </TouchableOpacity>
-      </ThemedView>
+        {/* Bottom action buttons */}
+        <View style={styles.bottomActions}>
+          <TouchableOpacity 
+            style={[styles.clearAllButton]} 
+            onPress={clearAllFilters}
+          >
+            <ThemedText style={styles.clearAllButtonText}>Clear All</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.searchButton, { backgroundColor: '#FF3B30' }]} 
+            onPress={() => {/* Navigation handled by parent component */}}
+          >
+            <IconSymbol name="magnifyingglass" size={20} color="white" style={styles.buttonIcon} />
+            <ThemedText style={styles.searchButtonText}>Search</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -308,6 +312,53 @@ const styles = StyleSheet.create({
   },
   selectedPillText: {
     color: 'black',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  bottomActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  clearAllButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearAllButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    opacity: 0.7,
+  },
+  searchButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonIcon: {
+    marginRight: 0,
   },
   exploreButton: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
-import { StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, Dimensions, View } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
@@ -50,7 +50,7 @@ export function MovieCard({ movie, onPress, variant = 'grid', onWatchlistPress, 
         placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
       />
       
-      <ThemedView style={styles.content}>
+      <View style={styles.content}>
         <ThemedText style={styles.title}>
           {movie.title}
         </ThemedText>
@@ -59,51 +59,51 @@ export function MovieCard({ movie, onPress, variant = 'grid', onWatchlistPress, 
           {'release_year' in movie ? movie.release_year : movie.first_air_year}
         </ThemedText>
         
-        <ThemedView style={styles.ratingsContainer}>
+        <View style={styles.ratingsContainer}>
           {movie.imdb_rating && (
-            <ThemedView style={styles.ratingContainer}>
+            <View style={styles.ratingContainer}>
               <IconSymbol name="star.fill" size={12} color="#FFD700" />
               <ThemedText style={styles.rating}>
                 {typeof movie.imdb_rating === 'number' 
                   ? movie.imdb_rating.toFixed(1) 
                   : parseFloat(movie.imdb_rating as string).toFixed(1)}
               </ThemedText>
-            </ThemedView>
+            </View>
           )}
           {movie.rotten_tomatoes_rating && (
-            <ThemedView style={styles.ratingContainer}>
+            <View style={styles.ratingContainer}>
               <IconSymbol name="circle.fill" size={12} color="#FF6347" />
               <ThemedText style={styles.rating}>
                 {typeof movie.rotten_tomatoes_rating === 'number' 
                   ? movie.rotten_tomatoes_rating 
                   : parseInt(movie.rotten_tomatoes_rating as string)}%
               </ThemedText>
-            </ThemedView>
+            </View>
           )}
-        </ThemedView>
+        </View>
         
-        <ThemedView style={styles.genresContainer}>
+        <View style={styles.genresContainer}>
           {movie.genres?.slice(0, 2).map((genre, index) => (
-            <ThemedView 
+            <View 
               key={genre}
               style={[styles.genreTag, { borderColor: tintColor + '40' }]}
             >
               <ThemedText style={[styles.genreText, { color: tintColor }]}>
                 {genre}
               </ThemedText>
-            </ThemedView>
+            </View>
           ))}
-        </ThemedView>
+        </View>
         
         {movie.watch_providers?.stream?.length > 0 && (
-          <ThemedView style={styles.streamingContainer}>
+          <View style={styles.streamingContainer}>
             <IconSymbol name="play.circle" size={14} color={tintColor} />
             <ThemedText style={[styles.streamingText, { color: tintColor }]}>
               {movie.watch_providers.stream[0]}
             </ThemedText>
-          </ThemedView>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -122,7 +122,7 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
       onPress={() => onPress?.(movie)}
       activeOpacity={0.9}
     >
-      <ThemedView style={styles.fullscreenTopSection}>
+      <View style={styles.fullscreenTopSection}>
         <Image
           source={{ uri: movie.poster_url }}
           style={[styles.fullscreenPosterSmall, { width: posterWidth, height: posterWidth * 1.5 }]}
@@ -130,8 +130,8 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
           placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
         />
         
-        <ThemedView style={styles.fullscreenTopContent}>
-          <ThemedView style={styles.fullscreenMetadata}>
+        <View style={styles.fullscreenTopContent}>
+          <View style={styles.fullscreenMetadata}>
             <ThemedText style={styles.fullscreenYear}>
               {'release_year' in movie ? movie.release_year : movie.first_air_year}
             </ThemedText>
@@ -140,46 +140,46 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
                 {movie.runtime} min
               </ThemedText>
             )}
-          </ThemedView>
+          </View>
           
-          <ThemedView style={styles.fullscreenRatingsContainer}>
+          <View style={styles.fullscreenRatingsContainer}>
             {movie.imdb_rating && (
-              <ThemedView style={styles.fullscreenRatingContainer}>
+              <View style={styles.fullscreenRatingContainer}>
                 <IconSymbol name="star.fill" size={18} color="#FFD700" />
                 <ThemedText style={styles.fullscreenRating}>
                   {typeof movie.imdb_rating === 'number' 
                     ? movie.imdb_rating.toFixed(1) 
                     : parseFloat(movie.imdb_rating as string).toFixed(1)}
                 </ThemedText>
-              </ThemedView>
+              </View>
             )}
             {movie.rotten_tomatoes_rating && (
-              <ThemedView style={styles.fullscreenRatingContainer}>
+              <View style={styles.fullscreenRatingContainer}>
                 <IconSymbol name="circle.fill" size={18} color="#FF6347" />
                 <ThemedText style={styles.fullscreenRating}>
                   {typeof movie.rotten_tomatoes_rating === 'number' 
                     ? movie.rotten_tomatoes_rating 
                     : parseInt(movie.rotten_tomatoes_rating as string)}%
                 </ThemedText>
-              </ThemedView>
+              </View>
             )}
-          </ThemedView>
-        </ThemedView>
-      </ThemedView>
+          </View>
+        </View>
+      </View>
       
-      <ThemedView style={styles.fullscreenTitleSection}>
+      <View style={styles.fullscreenTitleSection}>
         <ThemedText style={styles.fullscreenTitle}>
           {movie.title}
         </ThemedText>
-      </ThemedView>
+      </View>
       
-      <ThemedView style={styles.fullscreenBottomContent}>
+      <View style={styles.fullscreenBottomContent}>
         <ThemedText style={styles.overview} numberOfLines={3}>
           {movie.overview}
         </ThemedText>
         
         {(movie.type === 'movie' ? (movie as Movie).directors?.length > 0 : (movie as TVShow).creators?.length > 0) && (
-          <ThemedView style={styles.creditsSection}>
+          <View style={styles.creditsSection}>
             <ThemedText style={styles.creditsLabel}>
               {movie.type === 'movie' ? 'Director:' : 'Creator:'}
             </ThemedText>
@@ -188,47 +188,47 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
                 ? (movie as Movie).directors?.slice(0, 2).join(', ') 
                 : (movie as TVShow).creators?.slice(0, 2).join(', ')}
             </ThemedText>
-          </ThemedView>
+          </View>
         )}
         
         {movie.cast?.length > 0 && (
-          <ThemedView style={styles.creditsSection}>
+          <View style={styles.creditsSection}>
             <ThemedText style={styles.creditsLabel}>Cast:</ThemedText>
             <ThemedText style={styles.creditsText}>
               {movie.cast.slice(0, 3).join(', ')}
             </ThemedText>
-          </ThemedView>
+          </View>
         )}
         
         {/* Genres */}
         {movie.genres?.length > 0 && (
-          <ThemedView style={styles.criteriaSection}>
+          <View style={styles.criteriaSection}>
             <ThemedText style={styles.criteriaLabel}>Genres:</ThemedText>
-            <ThemedView style={styles.fullscreenGenresContainer}>
+            <View style={styles.fullscreenGenresContainer}>
               {movie.genres.slice(0, 4).map((genre) => (
-                <ThemedView 
+                <View 
                   key={genre}
                   style={[styles.fullscreenGenreTag, { borderColor: tintColor + '40' }]}
                 >
                   <ThemedText style={[styles.fullscreenGenreText, { color: tintColor }]}>
                     {genre}
                   </ThemedText>
-                </ThemedView>
+                </View>
               ))}
-            </ThemedView>
-          </ThemedView>
+            </View>
+          </View>
         )}
 
         {/* Tags - New unified tags section with shuffle button */}
         <TagsSection movie={movie} />
         
         {movie.watch_providers?.stream?.length > 0 && (
-          <ThemedView style={styles.fullscreenStreamingContainer}>
+          <View style={styles.fullscreenStreamingContainer}>
             <IconSymbol name="play.circle.fill" size={18} color={tintColor} />
             <ThemedText style={[styles.fullscreenStreamingText, { color: tintColor }]}>
               Stream on {movie.watch_providers.stream.slice(0, 2).join(', ')}
             </ThemedText>
-          </ThemedView>
+          </View>
         )}
         
         {onWatchlistPress && (
@@ -247,7 +247,7 @@ function FullscreenMovieCard({ movie, onPress, onWatchlistPress, isInWatchlist }
             </ThemedText>
           </TouchableOpacity>
         )}
-      </ThemedView>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -275,8 +275,8 @@ function TagsSection({ movie }: { movie: ContentItem }) {
   }
   
   return (
-    <ThemedView style={styles.criteriaSection}>
-      <ThemedView style={styles.tagsHeader}>
+    <View style={styles.criteriaSection}>
+      <View style={styles.tagsHeader}>
         <ThemedText style={styles.criteriaLabel}>Tags:</ThemedText>
         <TouchableOpacity 
           style={[styles.shuffleButton, { borderColor: tintColor }]} 
@@ -288,20 +288,20 @@ function TagsSection({ movie }: { movie: ContentItem }) {
             Shuffle
           </ThemedText>
         </TouchableOpacity>
-      </ThemedView>
-      <ThemedView style={styles.fullscreenGenresContainer}>
+      </View>
+      <View style={styles.fullscreenGenresContainer}>
         {shuffledTags.slice(0, 8).map((tag, index) => (
-          <ThemedView 
+          <View 
             key={`${tag}-${index}`}
             style={[styles.fullscreenGenreTag, { borderColor: '#6366F140' }]}
           >
             <ThemedText style={[styles.fullscreenGenreText, { color: '#6366F1' }]}>
               {tag}
             </ThemedText>
-          </ThemedView>
+          </View>
         ))}
-      </ThemedView>
-    </ThemedView>
+      </View>
+    </View>
   );
 }
 

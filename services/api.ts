@@ -105,6 +105,7 @@ export interface RandomContentParams {
   limit?: number;
   genres?: string;
   tags?: string; // New unified tags parameter
+  stream_providers?: string; // New stream providers parameter
   // Legacy parameters for backward compatibility
   tropes?: string;
   moods?: string;
@@ -194,6 +195,7 @@ export const api = {
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
       if (params.tags) searchParams.append('tags', params.tags);
+      if (params.stream_providers) searchParams.append('stream_providers', params.stream_providers);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 
@@ -230,6 +232,7 @@ export const api = {
       if (params.limit) searchParams.append('limit', params.limit.toString());
       if (params.genres) searchParams.append('genres', params.genres);
       if (params.tags) searchParams.append('tags', params.tags);
+      if (params.stream_providers) searchParams.append('stream_providers', params.stream_providers);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 

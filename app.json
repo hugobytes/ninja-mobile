@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ninja-mobile",
-    "slug": "ninja-mobile",
+    "slug": "binger-ninja",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -32,6 +32,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7f059a19-3fa3-4423-9c24-b73fc6379347"
+      }
+    },
+    "owner": "hugobytes"
   }
 }

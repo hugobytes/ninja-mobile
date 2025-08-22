@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { useState, useCallback } from 'react';
+import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+
 import { MovieCard } from '@/components/MovieCard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { api, Movie, TVShow } from '@/services/api';
-import { userService } from '@/services/userService';
+import { Movie, TVShow } from '@/services/api';
 import { useWatchlist } from '@/contexts/WatchlistContext';
 
 type ContentItem = Movie | TVShow;
@@ -39,7 +38,7 @@ export default function WatchlistScreen() {
   // Refresh watchlist when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      refreshWatchlist();
+      refreshWatchlist().catch();
     }, [refreshWatchlist])
   );
 
@@ -72,7 +71,7 @@ export default function WatchlistScreen() {
   };
 
   const renderContent = ({ item }: { item: ContentItem }) => (
-    <ThemedView style={styles.cardContainer}>
+    <View style={styles.cardContainer}>
       <MovieCard 
         movie={item} 
         onPress={handleContentPress} 
@@ -80,17 +79,17 @@ export default function WatchlistScreen() {
         onWatchlistPress={handleRemoveFromWatchlist}
         isInWatchlist={true}
       />
-    </ThemedView>
+    </View>
   );
 
   const renderGenreFilter = () => (
-    <ThemedView style={styles.genreFilterContainer}>
+    <View style={styles.genreFilterContainer}>
       <ThemedText style={styles.genreFilterTitle}>Filter by Genre</ThemedText>
-      <ThemedView style={styles.genreGrid}>
+      <View style={styles.genreGrid}>
         {availableGenres.map((genre) => {
           const isSelected = selectedGenres.includes(genre);
           return (
-            <ThemedView
+            <View
               key={genre}
               style={[
                 styles.genreChip,
@@ -112,23 +111,23 @@ export default function WatchlistScreen() {
               >
                 {genre}
               </ThemedText>
-            </ThemedView>
+            </View>
           );
         })}
-      </ThemedView>
+      </View>
       {selectedGenres.length > 0 && (
-        <ThemedView style={styles.clearFilterContainer}>
-          <ThemedView
+        <View style={styles.clearFilterContainer}>
+          <View
             style={[styles.clearButton, { backgroundColor: tintColor }]}
             onTouchEnd={() => setSelectedGenres([])}
           >
             <ThemedText style={styles.clearButtonText}>
               Clear Filters ({selectedGenres.length})
             </ThemedText>
-          </ThemedView>
-        </ThemedView>
+          </View>
+        </View>
       )}
-    </ThemedView>
+    </View>
   );
 
   if (loading) {
@@ -143,10 +142,10 @@ export default function WatchlistScreen() {
             style={styles.headerImage}
           />
         }>
-        <ThemedView style={styles.loadingContainer}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={tintColor} />
           <ThemedText style={styles.loadingText}>Loading your watchlist...</ThemedText>
-        </ThemedView>
+        </View>
       </ParallaxScrollView>
     );
   }
@@ -162,23 +161,23 @@ export default function WatchlistScreen() {
           style={styles.headerImage}
         />
       }>
-      <ThemedView style={styles.titleContainer}>
+      <View style={styles.titleContainer}>
         <ThemedText type="title">Watchlist</ThemedText>
         <ThemedText style={styles.subtitle}>
           {allSavedContent.length} {allSavedContent.length === 1 ? 'item' : 'items'}
         </ThemedText>
-      </ThemedView>
+      </View>
       
       {allSavedContent.length === 0 ? (
-        <ThemedView style={styles.stepContainer}>
+        <View style={styles.stepContainer}>
           <ThemedText style={styles.emptyTitle}>Your watchlist is empty</ThemedText>
           <ThemedText style={styles.emptySubtitle}>
             Add movies and TV shows from the Movies and TV Shows tabs to build your watchlist.
           </ThemedText>
-        </ThemedView>
+        </View>
       ) : (
         <>
-          <ThemedView style={styles.stepContainer}>
+          <View style={styles.stepContainer}>
             <ThemedText type="subtitle">Your Saved Content</ThemedText>
             <ThemedText style={styles.description}>
               {selectedGenres.length === 0 
@@ -186,11 +185,11 @@ export default function WatchlistScreen() {
                 : `Showing ${filteredContent.length} items matching selected genres`
               }
             </ThemedText>
-          </ThemedView>
+          </View>
           
           {availableGenres.length > 0 && renderGenreFilter()}
           
-          <ThemedView style={styles.contentContainer}>
+          <View style={styles.contentContainer}>
             <FlatList
               data={filteredContent}
               renderItem={renderContent}
@@ -204,7 +203,7 @@ export default function WatchlistScreen() {
               showsVerticalScrollIndicator={false}
               scrollEnabled={false} // Let ParallaxScrollView handle scrolling
             />
-          </ThemedView>
+          </View>
         </>
       )}
     </ParallaxScrollView>
