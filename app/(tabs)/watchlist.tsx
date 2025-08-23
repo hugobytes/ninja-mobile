@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -19,7 +19,7 @@ export default function WatchlistScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   
-  const { savedMovies, savedTVShows, loading, refreshWatchlist, removeFromWatchlist } = useWatchlist();
+  const { savedMovies, savedTVShows, loading, refreshWatchlist } = useWatchlist();
   const tintColor = useThemeColor({}, 'tint');
   const backgroundColor = useThemeColor({}, 'background');
 
@@ -30,7 +30,12 @@ export default function WatchlistScreen() {
   // Filter content by type
   const filteredByType = contentTypeFilter === 'all' 
     ? allSavedContent
-    : allSavedContent.filter(item => item.type === contentTypeFilter);
+    : allSavedContent.filter(item => {
+        if (contentTypeFilter === 'tv') {
+          return item.type === 'tv_show' || item.type === 'tv';
+        }
+        return item.type === contentTypeFilter;
+      });
 
   // Get recently saved (first 6 items)
   const recentlySaved = filteredByType.slice(0, 6);
@@ -73,16 +78,6 @@ export default function WatchlistScreen() {
     setRefreshing(true);
     await refreshWatchlist();
     setRefreshing(false);
-  };
-
-
-
-  const handleRemoveFromWatchlist = async (item: ContentItem) => {
-    try {
-      await removeFromWatchlist(item);
-    } catch (error) {
-      // Error handling is done in the context
-    }
   };
 
   const handleContentPress = (item: ContentItem) => {
@@ -209,7 +204,9 @@ export default function WatchlistScreen() {
             {renderContentTypeFilters()}
             {renderSection('Recently Saved', recentlySaved)}
             {tagCollections.map(collection => 
-              renderSection(`${collection.tagName}`, collection.items)
+              <React.Fragment key={collection.tagName}>
+                {renderSection(`${collection.tagName}`, collection.items)}
+              </React.Fragment>
             )}
           </ScrollView>
         )}
