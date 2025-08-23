@@ -31,7 +31,7 @@ export function WatchlistProvider({ children }: WatchlistProviderProps) {
     try {
       const accessKey = await userService.getAccessKey();
       if (!accessKey) {
-        console.warn('No access key available');
+        console.warn('Failed to get access key');
         return;
       }
 
@@ -48,6 +48,9 @@ export function WatchlistProvider({ children }: WatchlistProviderProps) {
       }
     } catch (error) {
       console.error('Failed to refresh watchlist:', error);
+      // Reset watchlist on error to avoid stale data
+      setSavedMovies([]);
+      setSavedTVShows([]);
     } finally {
       setLoading(false);
     }
@@ -57,7 +60,7 @@ export function WatchlistProvider({ children }: WatchlistProviderProps) {
     try {
       const accessKey = await userService.getAccessKey();
       if (!accessKey) {
-        Alert.alert('Error', 'Please try again later.');
+        Alert.alert('Error', 'Unable to authenticate. Please try again.');
         return;
       }
 
@@ -68,6 +71,8 @@ export function WatchlistProvider({ children }: WatchlistProviderProps) {
         await api.saveTVShow({ tv_show_id: item.id }, accessKey);
         setSavedTVShows(prev => [...prev, item as TVShow]);
       }
+      
+      console.log(`Successfully added ${item.type} to watchlist:`, item.title);
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
       Alert.alert('Error', 'Failed to add to watchlist. Please try again.');

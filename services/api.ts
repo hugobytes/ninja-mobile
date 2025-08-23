@@ -1,14 +1,14 @@
 import { Platform } from 'react-native';
 
 const isDevelopment = __DEV__;
-const API_BASE_URL = isDevelopment 
-  ? Platform.OS === 'ios' 
-    ? 'http://localhost:3000' 
-    : 'http://10.0.2.2:3000'  // Android emulator localhost
-  : 'https://www.bingerninja.com';
 
-let API_BASE_URL_OVERRIDE = null;
-API_BASE_URL_OVERRIDE = 'https://www.bingerninja.com';
+let API_BASE_URL = Platform.OS === 'ios'
+    ? 'http://localhost:3000' 
+    : 'http://10.0.2.2:3000';
+
+if (!isDevelopment) {
+  API_BASE_URL = 'https://www.bingerninja.com'
+}
 
 export interface CreateUserResponse {
   success: boolean;
@@ -147,11 +147,38 @@ export interface TagsResponse {
   tags: Tag[];
 }
 
+// Helper function to handle 401 errors with automatic retry
+async function handleAuthenticatedRequest<T>(
+  requestFn: (accessKey: string) => Promise<T>,
+  accessKey: string
+): Promise<T> {
+  try {
+    return await requestFn(accessKey);
+  } catch (error: any) {
+    // If it's a 401 error, try to create a new user and retry once
+    if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+      console.log('401 detected, creating new user and retrying...');
+      
+      // Import userService dynamically to avoid circular dependency
+      const { userService } = await import('./userService');
+      
+      // Clear old access key and create new user
+      await userService.clearUser();
+      const newAccessKey = await userService.initializeUser();
+      
+      // Retry the original request with new access key
+      return await requestFn(newAccessKey);
+    }
+    
+    // Re-throw if it's not a 401 error
+    throw error;
+  }
+}
+
 export const api = {
   async createUser(): Promise<CreateUserResponse> {
     try {
-      const baseUrl = API_BASE_URL_OVERRIDE ? API_BASE_URL_OVERRIDE : API_BASE_URL;
-      const response = await fetch(`${baseUrl}/api/v1/users`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -267,12 +294,12 @@ export const api = {
   },
 
   async saveMovie(params: SaveContentParams, accessKey: string): Promise<SaveContentResponse> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_movies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
         body: JSON.stringify(params),
       });
@@ -282,18 +309,15 @@ export const api = {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('Failed to save movie:', error);
-      throw error;
-    }
+    }, accessKey);
   },
 
   async getSavedMovies(accessKey: string): Promise<GetSavedContentResponse> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_movies`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
       });
 
@@ -302,37 +326,31 @@ export const api = {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('Failed to get saved movies:', error);
-      throw error;
-    }
+    }, accessKey);
   },
 
   async removeSavedMovie(movieId: number, accessKey: string): Promise<void> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_movies/${movieId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Failed to remove saved movie:', error);
-      throw error;
-    }
+    }, accessKey);
   },
 
   async saveTVShow(params: SaveContentParams, accessKey: string): Promise<SaveContentResponse> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
         body: JSON.stringify(params),
       });
@@ -342,18 +360,15 @@ export const api = {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('Failed to save TV show:', error);
-      throw error;
-    }
+    }, accessKey);
   },
 
   async getSavedTVShows(accessKey: string): Promise<GetSavedContentResponse> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
       });
 
@@ -362,27 +377,21 @@ export const api = {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('Failed to get saved TV shows:', error);
-      throw error;
-    }
+    }, accessKey);
   },
 
   async removeSavedTVShow(tvShowId: number, accessKey: string): Promise<void> {
-    try {
+    return await handleAuthenticatedRequest(async (key: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/user_tv_shows/${tvShowId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${accessKey}`,
+          'Authorization': `Bearer ${key}`,
         },
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Failed to remove saved TV show:', error);
-      throw error;
-    }
+    }, accessKey);
   }
 };

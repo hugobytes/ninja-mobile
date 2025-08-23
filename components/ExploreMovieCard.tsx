@@ -1,8 +1,6 @@
 import React from 'react';
 import {StyleSheet, TouchableOpacity, Dimensions, View} from 'react-native';
 import { Image } from 'expo-image';
-import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { Movie, TVShow } from '@/services/api';
@@ -15,6 +13,8 @@ interface ExploreMovieCardProps {
   onPress?: (movie: Movie | TVShow) => void;
 }
 
+const SMALL_MOVIE_POSTER_PADDING = 16;
+
 export function ExploreMovieCard({ movie, onPress }: ExploreMovieCardProps) {
   const insets = useSafeAreaInsets();
 
@@ -24,12 +24,23 @@ export function ExploreMovieCard({ movie, onPress }: ExploreMovieCardProps) {
       onPress={() => onPress?.(movie)}
       activeOpacity={0.95}
     >
-      {/* Full Screen Poster - FULL DEVICE HEIGHT */}
+      <View>
+          <Image
+            source={{ uri: movie.poster_url }}
+            style={styles.poster}
+            contentFit="cover"
+            placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+          />
+        <BlurView intensity={60} tint="dark" style={styles.blurView} />
+      </View>
       <Image
-        source={{ uri: movie.poster_url }}
-        style={styles.poster}
-        contentFit="cover"
-        placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+          source={{ uri: movie.poster_url }}
+          style={[styles.smallPoster, { 
+            top: '50%',
+            marginTop: -(((width - (SMALL_MOVIE_POSTER_PADDING * 2)) * 3/2) / 2) + (insets.top - CUSTOM_TAB_BAR_HEIGHT) / 2,
+          }]}
+          contentFit="cover"
+          placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
       />
     </TouchableOpacity>
   );
@@ -38,51 +49,33 @@ export function ExploreMovieCard({ movie, onPress }: ExploreMovieCardProps) {
 const styles = StyleSheet.create({
   container: {
     width,
+    height,
     position: 'relative',
   },
   poster: {
     width: '100%',
     height: '100%',
   },
-  overlay: {
+  smallPoster: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-    justifyContent: 'flex-end',
-    backgroundColor: 'transparent',
+    width: width - (SMALL_MOVIE_POSTER_PADDING * 2),
+    aspectRatio: 2/3, // Standard movie poster ratio
+    alignSelf: 'center',
+    left: SMALL_MOVIE_POSTER_PADDING,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1,
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-    lineHeight: 32,
-  },
-  ratingsContainer: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  ratingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  ratingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+  blurView: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.60)',
   },
 });

@@ -37,7 +37,7 @@ export const useFiltersStore = create<FilterState>()(
   persist(
     (set, get) => ({
       // Initial state with stable references
-      availableStreamProviders: ['Netflix', 'Apple TV', 'Amazon Prime', 'Disney+'],
+      availableStreamProviders: ['Netflix', 'Apple TV', 'Amazon Prime', 'Disney Plus'],
       availableTags: [],
       movieFilters: {
         streamProviders: [],

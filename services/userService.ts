@@ -31,7 +31,15 @@ export const userService = {
   },
 
   async getAccessKey(): Promise<string | null> {
-    return await storage.getAccessKey();
+    let accessKey = await storage.getAccessKey();
+    
+    // If no access key exists, create a new user
+    if (!accessKey) {
+      console.log('No access key found, creating new user...');
+      accessKey = await this.initializeUser();
+    }
+    
+    return accessKey;
   },
 
   async clearUser(): Promise<void> {

@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useFiltersStore, useAvailableFilters, useMovieFilters, useTVFilters } from '@/lib/filters';
+import {Colors} from "@/constants/Colors";
 
 interface TagsSelectionProps {
   type: 'movie' | 'tv';
@@ -200,17 +201,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  genreTag: {
+
+  },
+  genreText: {
+
+  },
   tagPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
     borderWidth: 1,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: Colors.surface,
   },
   pillText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   selectedPillText: {
     color: 'black',
