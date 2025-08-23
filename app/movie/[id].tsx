@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, View, Linking } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Pill } from '@/components/ui/Pill';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
 import { useWatchlist } from '@/contexts/WatchlistContext';
@@ -57,21 +59,17 @@ export default function MovieDetailsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top']}>
-
-      <View style={styles.heroContainer}>
-        <Image
+      <ParallaxScrollView
+        headerBackgroundColor={backgroundColor}
+        contentBackgroundColor={backgroundColor}
+        headerImage={
+          <Image
             source={{ uri: movie.poster_url }}
-            style={styles.heroPoster}
+            style={styles.headerPoster}
             contentFit="cover"
             placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-        />
-      </View>
-
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
+          />
+        }
       >
         <View style={styles.heroContent}>
           <View style={styles.titleRow}>
@@ -145,24 +143,12 @@ export default function MovieDetailsScreen() {
                 {movie.tags.map((tag) => {
                   const isHighlighted = selectedTagsList.includes(tag);
                   return (
-                    <View 
-                      key={tag} 
-                      style={[
-                        styles.genreTag,
-                        { borderColor: tintColor + '40' },
-                        isHighlighted && { 
-                          backgroundColor: tintColor, 
-                          borderColor: tintColor 
-                        }
-                      ]}
-                    >
-                      <ThemedText style={[
-                        styles.genreText, 
-                        { color: isHighlighted ? 'black' : tintColor }
-                      ]}>
-                        {tag}
-                      </ThemedText>
-                    </View>
+                    <Pill
+                      key={tag}
+                      label={tag}
+                      selected={isHighlighted}
+                      onPress={() => {}}
+                    />
                   );
                 })}
               </View>
@@ -191,7 +177,7 @@ export default function MovieDetailsScreen() {
             <ThemedText style={styles.searchButtonText}>Search the web</ThemedText>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </ParallaxScrollView>
     </SafeAreaView>
   );
 }
@@ -231,22 +217,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingBottom: 100
-  },
-  heroContainer: {
-    height: 200,
-    position: 'relative',
-  },
-  heroPoster: {
+  headerPoster: {
     width: '100%',
-    height: '100%',
+    height: 250,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
   },
   heroContent: {
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   heroMetadata: {
     flexDirection: 'row',
@@ -284,7 +264,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16
   },
   section: {
     marginBottom: 24,

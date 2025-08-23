@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from "@/constants/Colors";
 import { TVShow, Movie } from '@/services/api';
 import { useTVFilters } from '@/lib/filters';
+import {BlurView} from "expo-blur";
 
 export default function TVShowsScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -50,18 +51,19 @@ export default function TVShowsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerOverlay}>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowFilterModal(true)}
-          activeOpacity={0.8}
-        >
-          <IconSymbol 
-            style={{opacity: 0.75}}
-            name={hasActiveFilters ? "tv.fill" : "tv"} 
-            size={28}
-            color="white" 
-          />
-        </TouchableOpacity>
+        <BlurView intensity={10} tint="dark" style={styles.filterButton}>
+          <TouchableOpacity
+            onPress={() => setShowFilterModal(true)}
+            activeOpacity={0.8}
+          >
+            <IconSymbol
+              style={{opacity: 0.75}}
+              name={hasActiveFilters ? "slider.horizontal.3" : "slider.horizontal.3"}
+              size={28}
+              color="white"
+            />
+          </TouchableOpacity>
+        </BlurView>
       </View>
 
       <ExploreList
@@ -129,13 +131,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333',
   },
 });

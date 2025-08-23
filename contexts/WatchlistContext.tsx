@@ -64,18 +64,36 @@ export function WatchlistProvider({ children }: WatchlistProviderProps) {
         return;
       }
 
+      console.log('Adding to watchlist:', { 
+        type: item.type, 
+        id: item.id, 
+        title: item.title,
+        imdbid: item.imdbid 
+      });
+
       if (item.type === 'movie') {
-        await api.saveMovie({ movie_id: item.id }, accessKey);
+        const params = { 
+          movie_id: item.id,
+          imdbid: item.imdbid
+        };
+        console.log('Movie save params:', params);
+        await api.saveMovie(params, accessKey);
         setSavedMovies(prev => [...prev, item as Movie]);
       } else {
-        await api.saveTVShow({ tv_show_id: item.id }, accessKey);
+        const params = {
+          tv_show_id: item.id,
+          imdbid: item.imdbid
+        };
+        console.log('TV show save params:', params);
+        await api.saveTVShow(params, accessKey);
         setSavedTVShows(prev => [...prev, item as TVShow]);
       }
       
       console.log(`Successfully added ${item.type} to watchlist:`, item.title);
     } catch (error) {
       console.error('Failed to add to watchlist:', error);
-      Alert.alert('Error', 'Failed to add to watchlist. Please try again.');
+      console.error('Error details:', error.message);
+      Alert.alert('Error', `Failed to add to watchlist: ${error.message || 'Please try again.'}`);
       throw error;
     }
   }, []);

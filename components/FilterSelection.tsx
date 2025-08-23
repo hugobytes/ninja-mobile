@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
+import { Pill } from '@/components/ui/Pill';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useFiltersStore, useAvailableFilters, useMovieFilters, useTVFilters } from '@/lib/filters';
@@ -88,25 +89,12 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
               {streamProviders.map((provider) => {
                 const isSelected = currentFilters?.streamProviders?.includes(provider) || false;
                 return (
-                  <TouchableOpacity
+                  <Pill
                     key={provider}
-                    style={[
-                      styles.tagPill,
-                      { borderColor: textColor + '30' },
-                      isSelected && { backgroundColor: tintColor, borderColor: tintColor }
-                    ]}
+                    label={provider}
+                    selected={isSelected}
                     onPress={() => toggleStreamProvider(provider)}
-                    activeOpacity={0.7}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.pillText,
-                        isSelected && styles.selectedPillText
-                      ]}
-                    >
-                      {provider}
-                    </ThemedText>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -121,25 +109,12 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
               {tags.map((tag) => {
                 const isSelected = currentFilters?.tags?.includes(tag.name) || false;
                 return (
-                  <TouchableOpacity
+                  <Pill
                     key={tag.id}
-                    style={[
-                      styles.tagPill,
-                      { borderColor: textColor + '30' },
-                      isSelected && { backgroundColor: tintColor, borderColor: tintColor }
-                    ]}
+                    label={tag.name}
+                    selected={isSelected}
                     onPress={() => toggleTag(tag.name)}
-                    activeOpacity={0.7}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.pillText,
-                        isSelected && styles.selectedPillText
-                      ]}
-                    >
-                      {tag.name}
-                    </ThemedText>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>

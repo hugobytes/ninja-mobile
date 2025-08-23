@@ -26,7 +26,15 @@ export default function ParallaxScrollView({
 }: Props) {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
-  const bottom = useBottomTabOverflow();
+  
+  // Safely get bottom tab overflow, fallback to 0 if not in tab navigator
+  let bottom = 0;
+  try {
+    bottom = useBottomTabOverflow();
+  } catch (error) {
+    // Not in a tab navigator context, use 0
+    bottom = 0;
+  }
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -75,9 +83,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 32,
+    paddingTop: 32,
     gap: 16,
     overflow: 'hidden',
-    backgroundColor: Colors.background
+    backgroundColor: Colors.background,
+    paddingBottom: 64
   },
 });

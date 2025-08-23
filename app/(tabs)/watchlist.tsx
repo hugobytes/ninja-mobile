@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View, Image } from 'react-native';
+import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
+import { Image as ExpoImage } from 'expo-image';
 
-import { MovieCard } from '@/components/MovieCard';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Pill } from '@/components/ui/Pill';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
 import { useWatchlist } from '@/contexts/WatchlistContext';
@@ -14,8 +15,9 @@ import { Colors } from '@/constants/Colors';
 type ContentItem = Movie | TVShow;
 
 export default function WatchlistScreen() {
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [contentTypeFilter, setContentTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
   
   const { savedMovies, savedTVShows, loading, refreshWatchlist, removeFromWatchlist } = useWatchlist();
   const tintColor = useThemeColor({}, 'tint');
@@ -25,17 +27,40 @@ export default function WatchlistScreen() {
     new Date(b.last_synced_at).getTime() - new Date(a.last_synced_at).getTime()
   );
 
-  // Get all unique genres from saved content
-  const availableGenres = Array.from(
-    new Set(allSavedContent.flatMap(item => item.genres || []))
-  ).sort();
+  // Filter content by type
+  const filteredByType = contentTypeFilter === 'all' 
+    ? allSavedContent
+    : allSavedContent.filter(item => item.type === contentTypeFilter);
 
-  // Filter content by selected genres
-  const filteredContent = selectedGenres.length === 0 
-    ? allSavedContent 
-    : allSavedContent.filter(item => 
-        item.genres?.some(genre => selectedGenres.includes(genre))
-      );
+  // Get recently saved (first 6 items)
+  const recentlySaved = filteredByType.slice(0, 6);
+
+  // Calculate tag collections (4+ items, max 20 collections)
+  const tagCounts = filteredByType.reduce((acc, item) => {
+    item.tags?.forEach(tag => {
+      acc[tag] = (acc[tag] || 0) + 1;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  console.log('Tag counts:', tagCounts);
+  console.log('Filtered content:', filteredByType.length, 'items');
+  
+  // Get up to 20 collections with 4+ items each, sorted by popularity
+  const tagCollections = Object.entries(tagCounts)
+    .filter(([,count]) => count >= 4)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 20)
+    .map(([tagName, count]) => ({
+      tagName,
+      count,
+      items: filteredByType.filter(item => item.tags?.includes(tagName))
+    }));
+
+  console.log('Tag collections:', tagCollections.length, 'collections found');
+  tagCollections.forEach(collection => {
+    console.log(`- ${collection.tagName}: ${collection.count} items`);
+  });
 
   // Refresh watchlist when screen comes into focus
   useFocusEffect(
@@ -50,13 +75,6 @@ export default function WatchlistScreen() {
     setRefreshing(false);
   };
 
-  const toggleGenre = (genre: string) => {
-    setSelectedGenres(prev => 
-      prev.includes(genre)
-        ? prev.filter(g => g !== genre)
-        : [...prev, genre]
-    );
-  };
 
 
   const handleRemoveFromWatchlist = async (item: ContentItem) => {
@@ -68,21 +86,71 @@ export default function WatchlistScreen() {
   };
 
   const handleContentPress = (item: ContentItem) => {
-    console.log('Content pressed:', item.title);
-    // TODO: Navigate to content details
+    router.push({
+      pathname: '/movie/[id]',
+      params: {
+        id: item.id.toString(),
+        movieData: JSON.stringify(item),
+        selectedTags: JSON.stringify([])
+      }
+    });
   };
 
-  const renderContent = ({ item }: { item: ContentItem }) => (
-    <View style={styles.cardContainer}>
-      <MovieCard 
-        movie={item} 
-        onPress={handleContentPress} 
-        variant="grid"
-        onWatchlistPress={handleRemoveFromWatchlist}
-        isInWatchlist={true}
+  const renderPosterCard = ({ item }: { item: ContentItem }) => (
+    <TouchableOpacity
+      style={styles.posterCard}
+      onPress={() => handleContentPress(item)}
+      activeOpacity={0.7}
+    >
+      <ExpoImage
+        source={{ uri: item.poster_url }}
+        style={styles.posterImage}
+        contentFit="cover"
+        placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+      />
+    </TouchableOpacity>
+  );
+
+  const renderContentTypeFilters = () => (
+    <View style={styles.filterContainer}>
+      <Pill
+        label="All"
+        selected={contentTypeFilter === 'all'}
+        onPress={() => setContentTypeFilter('all')}
+      />
+      <Pill
+        label="Movies"
+        selected={contentTypeFilter === 'movie'}
+        onPress={() => setContentTypeFilter('movie')}
+      />
+      <Pill
+        label="TV Shows"
+        selected={contentTypeFilter === 'tv'}
+        onPress={() => setContentTypeFilter('tv')}
       />
     </View>
   );
+
+  const renderSection = (title: string, data: ContentItem[]) => {
+    if (data.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionTitleContainer}>
+          <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
+        </View>
+        <FlatList
+          data={data}
+          renderItem={renderPosterCard}
+          keyExtractor={(item) => `${item.type}-${item.id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalList}
+          ItemSeparatorComponent={() => <View style={styles.posterSeparator} />}
+        />
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -131,23 +199,19 @@ export default function WatchlistScreen() {
             </ThemedText>
           </View>
         ) : (
-          <>
-            <View style={styles.contentContainer}>
-              <FlatList
-                data={filteredContent}
-                renderItem={renderContent}
-                keyExtractor={(item) => `${item.type}-${item.id}`}
-                numColumns={2}
-                columnWrapperStyle={styles.row}
-                contentContainerStyle={styles.list}
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-                }
-                showsVerticalScrollIndicator={false}
-                scrollEnabled={false} // Let ParallaxScrollView handle scrolling
-              />
-            </View>
-          </>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            }
+            scrollEnabled={false} // Let ParallaxScrollView handle scrolling
+          >
+            {renderContentTypeFilters()}
+            {renderSection('Recently Saved', recentlySaved)}
+            {tagCollections.map(collection => 
+              renderSection(`${collection.tagName}`, collection.items)
+            )}
+          </ScrollView>
         )}
       </ParallaxScrollView>
     </View>
@@ -171,6 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     alignItems: 'baseline',
+    paddingHorizontal: 16,
   },
   subtitle: {
     fontSize: 16,
@@ -179,38 +244,40 @@ const styles = StyleSheet.create({
   stepContainer: {
     gap: 8,
     marginBottom: 16,
-  },
-  description: {
-    marginBottom: 8,
-    opacity: 0.8,
-  },
-  contentContainer: {
-    flex: 1,
-    minHeight: 400,
-  },
-  clearFilterContainer: {
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  clearButton: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
   },
-  clearButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
-  list: {
-    gap: 16,
+  section: {
+    marginBottom: 32,
   },
-  row: {
-    justifyContent: 'space-between',
+  sectionTitleContainer: {
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
-  cardContainer: {
-    width: '48%',
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  horizontalList: {
+    paddingHorizontal: 16,
+  },
+  posterCard: {
+    width: 120,
+    height: 180,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  posterImage: {
+    width: '100%',
+    height: '100%',
+  },
+  posterSeparator: {
+    width: 12,
   },
   loadingContainer: {
     padding: 32,
