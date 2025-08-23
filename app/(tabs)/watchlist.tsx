@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View } from 'react-native';
+import { StyleSheet, FlatList, ActivityIndicator, RefreshControl, View, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +9,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Movie, TVShow } from '@/services/api';
 import { useWatchlist } from '@/contexts/WatchlistContext';
+import { Colors } from '@/constants/Colors';
 
 type ContentItem = Movie | TVShow;
 
@@ -18,6 +19,7 @@ export default function WatchlistScreen() {
   
   const { savedMovies, savedTVShows, loading, refreshWatchlist, removeFromWatchlist } = useWatchlist();
   const tintColor = useThemeColor({}, 'tint');
+  const backgroundColor = useThemeColor({}, 'background');
 
   const allSavedContent = [...savedMovies, ...savedTVShows].sort((a, b) => 
     new Date(b.last_synced_at).getTime() - new Date(a.last_synced_at).getTime()
@@ -82,140 +84,88 @@ export default function WatchlistScreen() {
     </View>
   );
 
-  const renderGenreFilter = () => (
-    <View style={styles.genreFilterContainer}>
-      <ThemedText style={styles.genreFilterTitle}>Filter by Genre</ThemedText>
-      <View style={styles.genreGrid}>
-        {availableGenres.map((genre) => {
-          const isSelected = selectedGenres.includes(genre);
-          return (
-            <View
-              key={genre}
-              style={[
-                styles.genreChip,
-                isSelected && { backgroundColor: tintColor + '20', borderColor: tintColor }
-              ]}
-              onTouchEnd={() => toggleGenre(genre)}
-            >
-              <IconSymbol
-                name={isSelected ? 'checkmark.circle.fill' : 'circle'}
-                size={16}
-                color={isSelected ? tintColor : '#666'}
-                style={styles.genreIcon}
-              />
-              <ThemedText
-                style={[
-                  styles.genreText,
-                  isSelected && { color: tintColor }
-                ]}
-              >
-                {genre}
-              </ThemedText>
-            </View>
-          );
-        })}
-      </View>
-      {selectedGenres.length > 0 && (
-        <View style={styles.clearFilterContainer}>
-          <View
-            style={[styles.clearButton, { backgroundColor: tintColor }]}
-            onTouchEnd={() => setSelectedGenres([])}
-          >
-            <ThemedText style={styles.clearButtonText}>
-              Clear Filters ({selectedGenres.length})
-            </ThemedText>
-          </View>
-        </View>
-      )}
-    </View>
-  );
-
   if (loading) {
     return (
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-        headerImage={
-          <IconSymbol
-            size={310}
-            color="#808080"
-            name="bookmark.fill"
-            style={styles.headerImage}
-          />
-        }>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={tintColor} />
-          <ThemedText style={styles.loadingText}>Loading your watchlist...</ThemedText>
-        </View>
-      </ParallaxScrollView>
+      <View style={[styles.container, { backgroundColor: Colors.background }]}>
+        <ParallaxScrollView
+          headerBackgroundColor={backgroundColor}
+          contentBackgroundColor={Colors.background}
+          headerImage={
+            <Image
+              source={require('@/assets/images/popcorn.avif')}
+              style={styles.headerImage}
+            />
+          }>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={tintColor} />
+            <ThemedText style={styles.loadingText}>Loading your watchlist...</ThemedText>
+          </View>
+        </ParallaxScrollView>
+      </View>
     );
   }
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="bookmark.fill"
-          style={styles.headerImage}
-        />
-      }>
-      <View style={styles.titleContainer}>
-        <ThemedText type="title">Watchlist</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {allSavedContent.length} {allSavedContent.length === 1 ? 'item' : 'items'}
-        </ThemedText>
-      </View>
-      
-      {allSavedContent.length === 0 ? (
-        <View style={styles.stepContainer}>
-          <ThemedText style={styles.emptyTitle}>Your watchlist is empty</ThemedText>
-          <ThemedText style={styles.emptySubtitle}>
-            Add movies and TV shows from the Movies and TV Shows tabs to build your watchlist.
+    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+      <ParallaxScrollView
+        headerBackgroundColor={backgroundColor}
+        contentBackgroundColor={Colors.background}
+        headerImage={
+          <Image
+            source={require('@/assets/images/popcorn.avif')}
+            style={styles.headerImage}
+          />
+        }>
+        <View style={styles.titleContainer}>
+          <ThemedText type="title">Watchlist</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            {allSavedContent.length} {allSavedContent.length === 1 ? 'item' : 'items'}
           </ThemedText>
         </View>
-      ) : (
-        <>
+        
+        {allSavedContent.length === 0 ? (
           <View style={styles.stepContainer}>
-            <ThemedText type="subtitle">Your Saved Content</ThemedText>
-            <ThemedText style={styles.description}>
-              {selectedGenres.length === 0 
-                ? `Browse your ${allSavedContent.length} saved movies and TV shows`
-                : `Showing ${filteredContent.length} items matching selected genres`
-              }
+            <ThemedText style={styles.emptyTitle}>Your watchlist is empty</ThemedText>
+            <ThemedText style={styles.emptySubtitle}>
+              Add movies and TV shows from the Movies and TV Shows tabs to build your watchlist.
             </ThemedText>
           </View>
-          
-          {availableGenres.length > 0 && renderGenreFilter()}
-          
-          <View style={styles.contentContainer}>
-            <FlatList
-              data={filteredContent}
-              renderItem={renderContent}
-              keyExtractor={(item) => `${item.type}-${item.id}`}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
-              contentContainerStyle={styles.list}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-              }
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false} // Let ParallaxScrollView handle scrolling
-            />
-          </View>
-        </>
-      )}
-    </ParallaxScrollView>
+        ) : (
+          <>
+            <View style={styles.contentContainer}>
+              <FlatList
+                data={filteredContent}
+                renderItem={renderContent}
+                keyExtractor={(item) => `${item.type}-${item.id}`}
+                numColumns={2}
+                columnWrapperStyle={styles.row}
+                contentContainerStyle={styles.list}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+                }
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false} // Let ParallaxScrollView handle scrolling
+              />
+            </View>
+          </>
+        )}
+      </ParallaxScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
+    width: '100%',
+    height: 250,
+    bottom: 0,
+    left: 0,
     position: 'absolute',
+    opacity: 0.6,
+    resizeMode: 'cover',
   },
   titleContainer: {
     flexDirection: 'row',
@@ -237,35 +187,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     minHeight: 400,
-  },
-  genreFilterContainer: {
-    marginBottom: 24,
-  },
-  genreFilterTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  genreGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  genreChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#666',
-    marginBottom: 8,
-  },
-  genreIcon: {
-    marginRight: 6,
-  },
-  genreText: {
-    fontSize: 14,
   },
   clearFilterContainer: {
     alignItems: 'center',

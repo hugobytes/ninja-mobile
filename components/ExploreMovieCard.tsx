@@ -11,11 +11,12 @@ const { width, height } = Dimensions.get('window');
 interface ExploreMovieCardProps {
   movie: Movie | TVShow;
   onPress?: (movie: Movie | TVShow) => void;
+  selectedTags?: string[];
 }
 
 const SMALL_MOVIE_POSTER_PADDING = 16;
 
-export function ExploreMovieCard({ movie, onPress }: ExploreMovieCardProps) {
+export function ExploreMovieCard({ movie, onPress, selectedTags = [] }: ExploreMovieCardProps) {
   const insets = useSafeAreaInsets();
 
   return (

@@ -11,7 +11,7 @@ import { useWatchlist } from '@/contexts/WatchlistContext';
 import {Colors} from "@/constants/Colors";
 
 export default function MovieDetailsScreen() {
-  const { movieData } = useLocalSearchParams();
+  const { movieData, selectedTags } = useLocalSearchParams();
   
   const tintColor = useThemeColor({}, 'tint');
   const backgroundColor = useThemeColor({}, 'background');
@@ -19,6 +19,7 @@ export default function MovieDetailsScreen() {
   
   // Parse the movie data from params
   const movie: Movie | TVShow = movieData ? JSON.parse(movieData as string) : null;
+  const selectedTagsList: string[] = selectedTags ? JSON.parse(selectedTags as string) : [];
 
   if (!movie) {
     return (
@@ -138,16 +139,32 @@ export default function MovieDetailsScreen() {
           )}
 
           {/* Tags */}
-          {movie.genres && movie.genres.length > 0 && (
+          {movie.tags && movie.tags.length > 0 && (
             <View style={styles.section}>
               <View style={styles.genreContainer}>
-                {movie.tags.map((genre) => (
-                  <View key={genre} style={[styles.genreTag, { borderColor: tintColor + '40' }]}>
-                    <ThemedText style={[styles.genreText, { color: tintColor }]}>
-                      {genre}
-                    </ThemedText>
-                  </View>
-                ))}
+                {movie.tags.map((tag) => {
+                  const isHighlighted = selectedTagsList.includes(tag);
+                  return (
+                    <View 
+                      key={tag} 
+                      style={[
+                        styles.genreTag,
+                        { borderColor: tintColor + '40' },
+                        isHighlighted && { 
+                          backgroundColor: tintColor, 
+                          borderColor: tintColor 
+                        }
+                      ]}
+                    >
+                      <ThemedText style={[
+                        styles.genreText, 
+                        { color: isHighlighted ? 'black' : tintColor }
+                      ]}>
+                        {tag}
+                      </ThemedText>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           )}

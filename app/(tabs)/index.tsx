@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { ExploreList } from '@/components/ExploreList';
+import { ExploreList, ExploreListRef } from '@/components/ExploreList';
 import { FilterModal } from '@/components/FilterModal';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from "@/constants/Colors";
@@ -12,8 +12,14 @@ import { useMovieFilters } from '@/lib/filters';
 export default function MoviesScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const router = useRouter();
+  const exploreListRef = useRef<ExploreListRef>(null);
   
   const movieFilters = useMovieFilters();
+
+  // Reset scroll position when filters change
+  useEffect(() => {
+    exploreListRef.current?.scrollToTop();
+  }, [movieFilters?.streamProviders, movieFilters?.tags]);
 
   const handleGenreChange = () => {
     // This is handled automatically by FilterSelection component
@@ -24,7 +30,8 @@ export default function MoviesScreen() {
       pathname: '/movie/[id]',
       params: {
         id: item.id.toString(),
-        movieData: JSON.stringify(item)
+        movieData: JSON.stringify(item),
+        selectedTags: JSON.stringify(movieFilters?.tags || [])
       }
     });
   };
@@ -49,14 +56,15 @@ export default function MoviesScreen() {
         >
           <IconSymbol
             style={{opacity: 0.75}}
-            name={hasActiveFilters ? "line.horizontal.3.decrease.circle.fill" : "line.horizontal.3.decrease.circle"} 
-            size={32}
+            name={hasActiveFilters ? "movieclapper.fill" : "movieclapper"} 
+            size={28}
             color="white" 
           />
         </TouchableOpacity>
       </View>
 
       <ExploreList
+        ref={exploreListRef}
         type="movie"
         streamProviders={movieFilters?.streamProviders || []}
         tags={movieFilters?.tags || []}
