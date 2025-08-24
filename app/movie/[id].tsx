@@ -226,7 +226,6 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
   },
   heroMetadata: {
     flexDirection: 'row',

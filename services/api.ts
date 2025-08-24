@@ -6,7 +6,10 @@ let API_BASE_URL = Platform.OS === 'ios'
     ? 'http://localhost:3000' 
     : 'http://10.0.2.2:3000';
 
-if (!isDevelopment) {
+let useProductionEndpoint = !isDevelopment;
+useProductionEndpoint = true
+
+if (useProductionEndpoint) {
   API_BASE_URL = 'https://www.bingerninja.com'
 }
 
@@ -230,6 +233,9 @@ export const api = {
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
 
+      console.log('Fetching movies ...');
+      console.log('searchParams:', searchParams);
+
       const url = `${API_BASE_URL}/api/v1/movies/random${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       
       const headers: Record<string, string> = {
@@ -266,6 +272,11 @@ export const api = {
       if (params.stream_providers) searchParams.append('stream_providers', params.stream_providers);
       if (params.exclude_imdbids) searchParams.append('exclude_imdbids', params.exclude_imdbids);
       if (params.country) searchParams.append('country', params.country);
+
+      console.log('Fetching tv shows ...');
+
+      console.log(searchParams.get('tags'));
+      console.log(API_BASE_URL)
 
       const url = `${API_BASE_URL}/api/v1/tv_shows/random${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
       

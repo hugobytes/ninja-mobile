@@ -134,9 +134,6 @@ export const ExploreList = forwardRef<ExploreListRef, ExploreListProps>(({ type,
             <ThemedText style={styles.endOfListText}>
               You've seen all available {type === 'movie' ? 'movies' : 'TV shows'} with your current filters.
             </ThemedText>
-            <ThemedText style={styles.endOfListText}>
-              Try adjusting your filters or pull to refresh for new content.
-            </ThemedText>
           </View>
         </View>
       );

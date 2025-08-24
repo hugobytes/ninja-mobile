@@ -5,7 +5,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { Pill } from '@/components/ui/Pill';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useFiltersStore, useAvailableFilters, useMovieFilters, useTVFilters } from '@/lib/filters';
+import { useFiltersStore, useMovieFilters, useTVFilters } from '@/lib/filters';
+import { useTagsStore } from '@/stores/tagsStore';
 import {Colors} from "@/constants/Colors";
 
 interface TagsSelectionProps {
@@ -15,9 +16,8 @@ interface TagsSelectionProps {
 }
 
 export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
-  const { streamProviders, tags, isLoadingTags } = useAvailableFilters();
+  const tagsStore = useTagsStore();
   const { 
-    fetchAvailableFilters,
     setMovieStreamProviders, 
     setTVStreamProviders, 
     setMovieTags, 
@@ -25,9 +25,9 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
   } = useFiltersStore();
 
   useEffect(() => {
-    // Fetch available filters when component mounts
-    fetchAvailableFilters();
-  }, [fetchAvailableFilters]);
+    // Hydrate tags store on mount
+    tagsStore.hydrate();
+  }, [tagsStore.hydrate]);
   
   // Get current filters using the selector hooks instead of getState()
   const movieFilters = useMovieFilters();
@@ -65,7 +65,8 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
     onGenreChange?.(newSelection);
   };
 
-  if (isLoadingTags || !tags) {
+  // Show loading state only if no cached data and currently loading
+  if (tagsStore.isLoading && tagsStore.tags.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
         <View style={styles.loadingContainer}>
@@ -86,7 +87,9 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
               Stream Providers
             </ThemedText>
             <View style={styles.tagsGrid}>
-              {streamProviders.map((provider) => {
+              {/* TODO: Add stream providers from tags store when available */}
+              {/* For now, using static providers */}
+              {['Netflix', 'Prime Video', 'Disney+', 'Apple TV+', 'Hulu', 'HBO Max'].map((provider) => {
                 const isSelected = currentFilters?.streamProviders?.includes(provider) || false;
                 return (
                   <Pill
@@ -106,7 +109,7 @@ export function FilterSelection({ type, onGenreChange }: TagsSelectionProps) {
               Genres & Tags
             </ThemedText>
             <View style={styles.tagsGrid}>
-              {tags.map((tag) => {
+              {tagsStore.tags.map((tag) => {
                 const isSelected = currentFilters?.tags?.includes(tag.name) || false;
                 return (
                   <Pill
